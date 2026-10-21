@@ -7,9 +7,15 @@
         "phalcon",
         "inertia",
         "inertiajs",
+        "php",
         "vue",
+        "react",
+        "svelte",
+        "ssr",
         "spa",
-        "routes"
+        "vite",
+        "routes",
+        "ziggy"
     ],
     "homepage": "https://github.com/wielorzeczownik/phalcon-inertia#readme",
     "support": {
