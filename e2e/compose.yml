@@ -1,0 +1,52 @@
+name: phalcon-inertia-e2e
+
+x-node: &node
+  image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:7852dc5a7d72f5fe458a597d690f6c42fbc8e9e26ddfa95f8e6ef552558d9bbf
+  working_dir: /app/e2e
+  volumes:
+    - ..:/app
+    - node_modules:/app/e2e/node_modules
+
+services:
+  node:
+    <<: *node
+    profiles: [tools]
+    environment:
+      BASE_URL: http://php:8000
+
+  ssr:
+    <<: *node
+    command: node bootstrap/ssr/ssr.js
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:13714/health').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 1s
+      retries: 30
+
+  php:
+    image: phalcon-inertia:${VARIANT:?set VARIANT}
+    working_dir: /app
+    command: php -S 0.0.0.0:8000 -t e2e/public e2e/public/index.php
+    volumes:
+      - ..:/app:ro
+    environment:
+      SSR_URL: http://ssr:13714
+      PHP_CLI_SERVER_WORKERS: '4'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'php',
+          '-r',
+          "exit(@file_get_contents('http://127.0.0.1:8000/admin') === false ? 1 : 0);",
+        ]
+      interval: 1s
+      retries: 30
+
+volumes:
+  node_modules:
