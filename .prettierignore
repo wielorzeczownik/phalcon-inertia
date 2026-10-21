@@ -1,0 +1,8 @@
+vendor
+
+composer.json
+composer.lock
+CHANGELOG.md
+e2e/package-lock.json
+js/package-lock.json
+js/dist

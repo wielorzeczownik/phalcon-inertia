@@ -1,0 +1,82 @@
+{
+    "name": "wielorzeczownik/phalcon-inertia",
+    "description": "Inertia.js server adapter for Phalcon 3.4 to 5, with Ziggy style named routes for JavaScript.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "phalcon",
+        "inertia",
+        "inertiajs",
+        "vue",
+        "spa",
+        "routes"
+    ],
+    "homepage": "https://github.com/wielorzeczownik/phalcon-inertia#readme",
+    "support": {
+        "issues": "https://github.com/wielorzeczownik/phalcon-inertia/issues",
+        "source": "https://github.com/wielorzeczownik/phalcon-inertia"
+    },
+    "authors": [
+        {
+            "name": "wielorzeczownik",
+            "homepage": "https://github.com/wielorzeczownik"
+        }
+    ],
+    "require": {
+        "php": "^5.6 || ^7.0 || ^8.0",
+        "ext-json": "*",
+        "ext-phalcon": "^3.4 || ^4.1 || ^5.0"
+    },
+    "require-dev": {
+        "laravel/pint": "1.30.4",
+        "phalcon/ide-stubs": "^3.4 || ^4.0 || ^5.0",
+        "phpunit/phpunit": "11.5.57"
+    },
+    "suggest": {
+        "ext-openssl": "CSRF tokens on PHP 5.6, where random_bytes() does not exist",
+        "phpunit/phpunit": "assertInertia() and AssertableInertia in your own tests"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhalconInertia\\": "src/"
+        },
+        "files": [
+            "src/aliases.php",
+            "src/helpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhalconInertia\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:matrix": [
+            "Composer\\Config::disableProcessTimeout",
+            "scripts/test-matrix.sh"
+        ],
+        "test:e2e": [
+            "Composer\\Config::disableProcessTimeout",
+            "scripts/test-e2e.sh"
+        ],
+        "test:js": "npm --prefix js test",
+        "lint": "pint --test",
+        "format": "pint"
+    },
+    "config": {
+        "platform": {
+            "php": "8.2.33",
+            "ext-phalcon": "5.23.0"
+        },
+        "sort-packages": true
+    },
+    "scripts-descriptions": {
+        "test": "PHPUnit on the local PHP, which needs the phalcon extension",
+        "test:matrix": "PHPUnit in Docker for every supported PHP and Phalcon pair, or the variants given as arguments",
+        "test:e2e": "Playwright against a Phalcon, Vue and SSR example app in Docker, for the oldest and newest pairs or the variants given",
+        "test:js": "Vitest for the route() helper in js/",
+        "lint": "Pint in check mode",
+        "format": "Pint, applying fixes"
+    }
+}

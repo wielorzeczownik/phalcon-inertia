@@ -1,0 +1,49 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["github>wielorzeczownik/.github"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/validate\\.yml$/",
+        "/^scripts/test-matrix\\.sh$/"
+      ],
+      "matchStrings": [
+        "(?<depName>php):(?<currentValue>\\d+\\.\\d+-cli)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["php"],
+      "matchUpdateTypes": ["major", "minor", "patch"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["php"],
+      "groupName": "php test images",
+      "semanticCommitType": "test"
+    },
+    {
+      "matchPackageNames": ["laravel/pint"],
+      "allowedVersions": "<1.30.5"
+    },
+    {
+      "matchPackageNames": ["phpunit/phpunit"],
+      "allowedVersions": "<12.0.0"
+    },
+    {
+      "matchPackageNames": ["@playwright/test", "mcr.microsoft.com/playwright"],
+      "groupName": "playwright"
+    },
+    {
+      "matchFileNames": ["e2e/**"],
+      "semanticCommitType": "test"
+    }
+  ]
+}

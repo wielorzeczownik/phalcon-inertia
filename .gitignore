@@ -1,0 +1,11 @@
+vendor
+.phpunit.cache
+.pint.cache
+.DS_Store
+e2e/node_modules
+js/node_modules
+e2e/public/build
+e2e/public/hot
+e2e/bootstrap/ssr
+e2e/test-results
+e2e/playwright-report
