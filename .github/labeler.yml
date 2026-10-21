@@ -1,0 +1,43 @@
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+
+php:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'src/**'
+          - 'tests/**'
+          - 'composer.json'
+          - 'composer.lock'
+          - 'pint.json'
+          - 'phpunit.xml'
+
+js:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'js/**'
+
+docker:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'docker/**'
+          - 'scripts/test-matrix.sh'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'composer.json'
+          - 'composer.lock'
+          - 'renovate.json'
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+
+e2e:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'e2e/**'
+          - 'scripts/test-e2e.sh'

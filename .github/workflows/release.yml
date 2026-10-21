@@ -1,0 +1,192 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'js/dist/**'
+      - 'js/package.json'
+      - 'composer.json'
+
+permissions: {}
+
+concurrency:
+  group: release-main
+  cancel-in-progress: false
+
+jobs:
+  prepare-release:
+    name: Prepare release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.bump.outputs.released }}
+      version: ${{ steps.bump.outputs.version }}
+      tag: ${{ steps.bump.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Determine next version (git-cliff)
+        id: cliff_bumped
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff.toml
+          args: --bumped-version
+        env:
+          OUTPUT: bumped-version.txt
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Detect user-facing changes (git-cliff)
+        id: cliff_userfacing
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff-release.toml
+          args: --unreleased --context
+        env:
+          OUTPUT: user-facing.json
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Count user-facing commits
+        id: userfacing
+        shell: bash
+        run: |
+          set -euo pipefail
+          count=$(jq '[.[].commits[]] | length' user-facing.json)
+          echo "User-facing commits since the last tag: $count"
+          echo "count=$count" >>"$GITHUB_OUTPUT"
+
+      - name: Decide version
+        id: bump
+        if: ${{ steps.userfacing.outputs.count != '0' }}
+        shell: bash
+        env:
+          CLIFF_BUMPED_VERSION: ${{ steps.cliff_bumped.outputs.content }}
+        run: bash scripts/bump-version.sh
+
+      - name: Generate release notes (git-cliff)
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff-release.toml
+          args: --unreleased --tag ${{ steps.bump.outputs.tag }}
+        env:
+          OUTPUT: release-notes.md
+          GITHUB_REPO: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Generate CHANGELOG.md (git-cliff)
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        uses: orhun/git-cliff-action@a9a95522b26fe6403f7bb24031f21fb573d0f5ff # v4.9.1
+        with:
+          config: cliff.toml
+          args: --tag ${{ steps.bump.outputs.tag }}
+        env:
+          OUTPUT: CHANGELOG.md
+          GITHUB_REPO: ${{ github.repository }}
+
+      - name: Stage changelog
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        run: git add CHANGELOG.md
+
+      - name: Commit release (verified)
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        uses: qoomon/actions--create-commit@7102b1a8b3cb8716dc70dbeb6d774c375d779d2f # v1.2.5
+        with:
+          message: 'chore(release): ${{ steps.bump.outputs.tag }} [skip ci]'
+          skip-empty: true
+
+      - name: Push commit
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        run: git push
+
+      - name: Create tag
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        uses: qoomon/actions--create-tag@bc18da911783e8dd24a7ae3ec1a95af941d29f60 # v1.0.0
+        with:
+          name: '${{ steps.bump.outputs.tag }}'
+          message: '${{ steps.bump.outputs.tag }}'
+
+      - name: Push tag
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        run: git push origin 'refs/tags/${{ steps.bump.outputs.tag }}'
+
+      - name: Upload release notes
+        if: ${{ steps.bump.outputs.released == 'true' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-notes
+          path: release-notes.md
+
+  publish-release:
+    name: Release
+    needs: prepare-release
+    if: ${{ needs.prepare-release.outputs.released == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: release
+      url: https://github.com/${{ github.repository }}/releases/tag/${{ needs.prepare-release.outputs.tag }}
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.prepare-release.outputs.tag }}
+          persist-credentials: false
+          path: source
+
+      - name: Download release notes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-notes
+          path: .
+
+      - name: Package
+        shell: bash
+        env:
+          TAG: ${{ needs.prepare-release.outputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          git -C source archive --format=tar.gz --prefix="phalcon-inertia-${TAG}/" -o "../dist/phalcon-inertia-${TAG}.tar.gz" HEAD
+
+      - name: Generate SBOM
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          path: source
+          format: spdx-json
+          output-file: dist/phalcon-inertia.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.spdx.json
+
+      - name: Compute SHA-256 checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          sha256sum -- *.tar.gz >SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          tag_name: ${{ needs.prepare-release.outputs.tag }}
+          name: ${{ needs.prepare-release.outputs.tag }}
+          body_path: release-notes.md
+          files: dist/*
