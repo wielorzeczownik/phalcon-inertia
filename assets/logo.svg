@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="phalcon-inertia logo">
+  <defs>
+    <linearGradient id="wing" gradientUnits="userSpaceOnUse" x1="28" y1="220" x2="232" y2="40">
+      <stop offset="0" stop-color="#76C39B"/>
+      <stop offset="0.5" stop-color="#5E9BE0"/>
+      <stop offset="1" stop-color="#9553E9"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#wing)" transform="translate(0 -10)">
+    <path d="M28 184 C68 102 140 56 232 50 C178 82 130 120 96 170 Z"/>
+    <path d="M76 212 C110 160 160 126 222 114 C178 140 144 168 124 206 Z"/>
+    <path d="M124 230 C146 204 176 184 210 174 C184 192 166 208 154 228 Z"/>
+  </g>
+</svg>
