@@ -1,12 +1,13 @@
 <?php
 
 use Phalcon\Di;
+use Phalcon\Http\Response;
+use PhalconInertia\Inertia;
 
 if (! function_exists('inertia')) {
     /**
-     * @param string|null $component
-     * @param array $props
-     * @return ($component is null ? \PhalconInertia\Inertia : \Phalcon\Http\Response)
+     * @param  string|null  $component
+     * @return ($component is null ? Inertia : Response)
      */
     function inertia($component = null, array $props = [])
     {

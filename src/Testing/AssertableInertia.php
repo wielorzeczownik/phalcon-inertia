@@ -2,6 +2,8 @@
 
 namespace PhalconInertia\Testing;
 
+use Phalcon\Http\ResponseInterface;
+
 class AssertableInertia
 {
     private $page;
@@ -22,7 +24,7 @@ class AssertableInertia
     }
 
     /**
-     * @param \Phalcon\Http\ResponseInterface $response
+     * @param  ResponseInterface  $response
      * @return self
      */
     public static function fromResponse($response)
@@ -44,7 +46,7 @@ class AssertableInertia
     }
 
     /**
-     * @param string $name
+     * @param  string  $name
      * @return $this
      */
     public function component($name)
@@ -55,7 +57,7 @@ class AssertableInertia
     }
 
     /**
-     * @param string $url
+     * @param  string  $url
      * @return $this
      */
     public function url($url)
@@ -66,7 +68,7 @@ class AssertableInertia
     }
 
     /**
-     * @param string $version
+     * @param  string  $version
      * @return $this
      */
     public function version($version)
@@ -80,9 +82,9 @@ class AssertableInertia
      * Assert the prop exists, optionally with $count items. $callback gets the prop, or its first item
      * when $count is given, scoped as another AssertableInertia.
      *
-     * @param string $key Dot notation
-     * @param int|callable|null $count
-     * @param callable|null $callback
+     * @param  string  $key  Dot notation
+     * @param  int|callable|null  $count
+     * @param  callable|null  $callback
      * @return $this
      */
     public function has($key, $count = null, $callback = null)
@@ -126,8 +128,8 @@ class AssertableInertia
     }
 
     /**
-     * @param string $key Dot notation
-     * @param mixed $expected Value, or a callback that returns true
+     * @param  string  $key  Dot notation
+     * @param  mixed  $expected  Value, or a callback that returns true
      * @return $this
      */
     public function where($key, $expected)
@@ -145,7 +147,7 @@ class AssertableInertia
     }
 
     /**
-     * @param string $key Dot notation
+     * @param  string  $key  Dot notation
      * @return $this
      */
     public function missing($key)
@@ -157,7 +159,7 @@ class AssertableInertia
     }
 
     /**
-     * @param string|null $key Dot notation
+     * @param  string|null  $key  Dot notation
      * @return mixed
      */
     public function prop($key = null)

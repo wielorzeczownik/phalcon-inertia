@@ -3,6 +3,8 @@
 namespace PhalconInertia;
 
 use Phalcon\Di\Injectable;
+use Phalcon\Events\Event;
+use Phalcon\Mvc\Dispatcher;
 
 class Csrf extends Injectable
 {
@@ -15,8 +17,8 @@ class Csrf extends Injectable
     /**
      * dispatch:beforeExecuteRoute listener that sets the XSRF-TOKEN cookie and answers 419 to unsafe requests without a valid token.
      *
-     * @param \Phalcon\Events\Event $event
-     * @param \Phalcon\Mvc\Dispatcher $dispatcher
+     * @param  Event  $event
+     * @param  Dispatcher  $dispatcher
      * @return bool
      */
     public function beforeExecuteRoute($event, $dispatcher)

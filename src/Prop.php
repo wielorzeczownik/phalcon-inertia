@@ -40,7 +40,7 @@ class Prop
     }
 
     /**
-     * @param mixed $value
+     * @param  mixed  $value
      * @return Prop
      */
     public static function always($value)
@@ -52,7 +52,7 @@ class Prop
     }
 
     /**
-     * @param callable $callback
+     * @param  callable  $callback
      * @return Prop
      */
     public static function optional($callback)
@@ -64,7 +64,7 @@ class Prop
     }
 
     /**
-     * @param mixed $value
+     * @param  mixed  $value
      * @return Prop
      */
     public static function value($value)
@@ -73,9 +73,9 @@ class Prop
     }
 
     /**
-     * @param callable $callback
-     * @param string $group Props in the same group load in one request
-     * @param bool $rescue Log a throwing callback and drop the prop instead of failing the request
+     * @param  callable  $callback
+     * @param  string  $group  Props in the same group load in one request
+     * @param  bool  $rescue  Log a throwing callback and drop the prop instead of failing the request
      * @return Prop
      */
     public static function defer($callback, $group = 'default', $rescue = false)
@@ -88,9 +88,9 @@ class Prop
     }
 
     /**
-     * @param mixed $value Phalcon paginator page, or data with the items under $wrapper
-     * @param string $wrapper
-     * @param array|null $metadata currentPage, previousPage and nextPage, required without a paginator
+     * @param  mixed  $value  Phalcon paginator page, or data with the items under $wrapper
+     * @param  string  $wrapper
+     * @param  array|null  $metadata  currentPage, previousPage and nextPage, required without a paginator
      * @return Prop
      */
     public static function scroll($value, $wrapper = 'data', $metadata = null)
@@ -102,7 +102,7 @@ class Prop
     }
 
     /**
-     * @param mixed $value
+     * @param  mixed  $value
      * @return Prop
      */
     public static function merge($value)
@@ -113,7 +113,7 @@ class Prop
     }
 
     /**
-     * @param mixed $value
+     * @param  mixed  $value
      * @return Prop
      */
     public static function deepMerge($value)
@@ -156,7 +156,7 @@ class Prop
     /**
      * Merge items that share this field instead of appending duplicates.
      *
-     * @param string $field
+     * @param  string  $field
      * @return $this
      */
     public function matchOn($field)
@@ -167,7 +167,7 @@ class Prop
     }
 
     /**
-     * @param bool $once
+     * @param  bool  $once
      * @return $this
      */
     public function once($once = true)
@@ -180,7 +180,7 @@ class Prop
     /**
      * Share the once cache between props that use the same key.
      *
-     * @param string $key
+     * @param  string  $key
      * @return $this
      */
     public function key($key)
@@ -194,7 +194,7 @@ class Prop
     /**
      * Expire the once prop at a time, after an interval, or after a number of seconds.
      *
-     * @param \DateTimeInterface|\DateInterval|int $time
+     * @param  \DateTimeInterface|\DateInterval|int  $time
      * @return $this
      */
     public function until($time)
@@ -212,7 +212,7 @@ class Prop
     /**
      * Resolve a once prop again even when the client already has it.
      *
-     * @param bool $fresh
+     * @param  bool  $fresh
      * @return $this
      */
     public function fresh($fresh = true)
@@ -287,7 +287,7 @@ class Prop
     }
 
     /**
-     * @param string $default
+     * @param  string  $default
      * @return string
      */
     public function onceKey($default)

@@ -13,9 +13,9 @@ class Vite
     private $manifest;
 
     /**
-     * @param string $publicPath
-     * @param string $buildDirectory
-     * @param string $assetUrl
+     * @param  string  $publicPath
+     * @param  string  $buildDirectory
+     * @param  string  $assetUrl
      */
     public function __construct($publicPath, $buildDirectory = 'build', $assetUrl = '/')
     {
@@ -35,8 +35,8 @@ class Vite
     /**
      * Script and stylesheet tags for the entries, from the dev server when it runs, else from the manifest.
      *
-     * @param string|string[] $entries
-     * @param string|null $nonce
+     * @param  string|string[]  $entries
+     * @param  string|null  $nonce
      * @return string
      *
      * @throws Exception When the manifest or an entry is missing
@@ -83,7 +83,7 @@ class Vite
     }
 
     /**
-     * @param string $path
+     * @param  string  $path
      * @return string
      *
      * @throws Exception When the manifest or the file is missing

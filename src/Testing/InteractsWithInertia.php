@@ -2,11 +2,13 @@
 
 namespace PhalconInertia\Testing;
 
+use Phalcon\Http\ResponseInterface;
+
 trait InteractsWithInertia
 {
     /**
-     * @param \Phalcon\Http\ResponseInterface $response
-     * @param callable|null $callback
+     * @param  ResponseInterface  $response
+     * @param  callable|null  $callback
      * @return AssertableInertia
      */
     public function assertInertia($response, $callback = null)

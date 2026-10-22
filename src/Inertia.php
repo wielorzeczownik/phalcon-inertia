@@ -3,7 +3,12 @@
 namespace PhalconInertia;
 
 use Phalcon\Di\Injectable;
+use Phalcon\Events\Event;
 use Phalcon\Http\Response;
+use Phalcon\Http\ResponseInterface;
+use Phalcon\Mvc\Application;
+use Phalcon\Mvc\Dispatcher;
+use Phalcon\Validation;
 
 class Inertia extends Injectable
 {
@@ -24,8 +29,8 @@ class Inertia extends Injectable
     private $ssr;
 
     /**
-     * @param string $rootView Path to the PHP template that renders the HTML shell
-     * @param string $version Asset version, a mismatch makes the client reload the page
+     * @param  string  $rootView  Path to the PHP template that renders the HTML shell
+     * @param  string  $version  Asset version, a mismatch makes the client reload the page
      */
     public function __construct($rootView, $version = '')
     {
@@ -36,7 +41,7 @@ class Inertia extends Injectable
     /**
      * Include the prop in every response, partial reloads too.
      *
-     * @param mixed $value
+     * @param  mixed  $value
      * @return Prop
      */
     public static function always($value)
@@ -47,7 +52,7 @@ class Inertia extends Injectable
     /**
      * Include the prop only when a partial reload asks for it.
      *
-     * @param callable $callback
+     * @param  callable  $callback
      * @return Prop
      */
     public static function optional($callback)
@@ -59,9 +64,9 @@ class Inertia extends Injectable
      * Load the prop in a request right after the page renders. Props with the same $group load together,
      * and with $rescue a throwing callback is logged and the prop dropped instead of failing the request.
      *
-     * @param callable $callback
-     * @param string $group
-     * @param bool $rescue
+     * @param  callable  $callback
+     * @param  string  $group
+     * @param  bool  $rescue
      * @return Prop
      */
     public static function defer($callback, $group = 'default', $rescue = false)
@@ -72,7 +77,7 @@ class Inertia extends Injectable
     /**
      * Resolve the prop once and let the client keep it on later visits.
      *
-     * @param callable $callback
+     * @param  callable  $callback
      * @return Prop
      */
     public static function once($callback)
@@ -84,9 +89,9 @@ class Inertia extends Injectable
      * Prop for infinite scroll. $value is a Phalcon paginator page, or data whose items sit under the
      * $wrapper key together with $metadata (currentPage, previousPage, nextPage).
      *
-     * @param mixed $value
-     * @param string $wrapper
-     * @param array|null $metadata
+     * @param  mixed  $value
+     * @param  string  $wrapper
+     * @param  array|null  $metadata
      * @return Prop
      */
     public static function scroll($value, $wrapper = 'data', $metadata = null)
@@ -95,7 +100,7 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param mixed $value
+     * @param  mixed  $value
      * @return Prop
      */
     public static function merge($value)
@@ -104,7 +109,7 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param mixed $value
+     * @param  mixed  $value
      * @return Prop
      */
     public static function deepMerge($value)
@@ -113,8 +118,8 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param string|array $key Prop name, or an array of name => value
-     * @param mixed $value
+     * @param  string|array  $key  Prop name, or an array of name => value
+     * @param  mixed  $value
      * @return $this
      */
     public function share($key, $value = null)
@@ -128,10 +133,10 @@ class Inertia extends Injectable
      * Read the request body, whether JSON, POST or PUT. $filters are Phalcon filter names applied to the value,
      * and with $notAllowEmpty an empty value returns $default. Without $name, returns all fields.
      *
-     * @param string|null $name
-     * @param string|array|null $filters
-     * @param mixed $default
-     * @param bool $notAllowEmpty
+     * @param  string|null  $name
+     * @param  string|array|null  $filters
+     * @param  mixed  $default
+     * @param  bool  $notAllowEmpty
      * @return mixed
      */
     public function input($name = null, $filters = null, $default = null, $notAllowEmpty = false)
@@ -161,7 +166,7 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param string $rootView
+     * @param  string  $rootView
      * @return $this
      */
     public function setRootView($rootView)
@@ -174,8 +179,8 @@ class Inertia extends Injectable
     /**
      * Redirect to the same-origin referer, or to $fallback.
      *
-     * @param string $fallback
-     * @return \Phalcon\Http\Response
+     * @param  string  $fallback
+     * @return Response
      */
     public function back($fallback = '/')
     {
@@ -185,7 +190,7 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param bool $encrypt
+     * @param  bool  $encrypt
      * @return $this
      */
     public function encryptHistory($encrypt = true)
@@ -208,7 +213,7 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param SsrGateway|null $ssr
+     * @param  SsrGateway|null  $ssr
      * @return $this
      */
     public function setSsr($ssr)
@@ -222,8 +227,8 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param array|iterable $errors Phalcon validation messages or field => message
-     * @param string $bag
+     * @param  array|iterable  $errors  Phalcon validation messages or field => message
+     * @param  string  $bag
      * @return $this
      *
      * @throws Exception When there is no session service
@@ -242,9 +247,9 @@ class Inertia extends Injectable
      * Validate the input, or $data, and return it. On failure the errors are flashed for the next page.
      * A Precognition request always throws, so the listener answers with the validation result only.
      *
-     * @param \Phalcon\Validation|\Phalcon\Filter\Validation $validation
-     * @param array|null $data
-     * @param string $bag
+     * @param  Validation|\Phalcon\Filter\Validation  $validation
+     * @param  array|null  $data
+     * @param  string  $bag
      * @return array
      *
      * @throws ValidationException
@@ -273,8 +278,8 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param string|array $key Name, or an array of name => value
-     * @param mixed $value
+     * @param  string|array  $key  Name, or an array of name => value
+     * @param  mixed  $value
      * @return $this
      *
      * @throws Exception When there is no session service
@@ -291,9 +296,8 @@ class Inertia extends Injectable
     }
 
     /**
-     * @param string $component
-     * @param array $props
-     * @return \Phalcon\Http\Response
+     * @param  string  $component
+     * @return Response
      */
     public function render($component, array $props = [])
     {
@@ -362,8 +366,8 @@ class Inertia extends Injectable
     /**
      * Visit an external URL, or a non-Inertia page, with a full page load.
      *
-     * @param string $url
-     * @return \Phalcon\Http\Response
+     * @param  string  $url
+     * @return Response
      */
     public function location($url)
     {
@@ -382,9 +386,9 @@ class Inertia extends Injectable
     /**
      * dispatch:beforeException listener that answers a ValidationException with a redirect back or a Precognition response.
      *
-     * @param \Phalcon\Events\Event $event
-     * @param \Phalcon\Mvc\Dispatcher $dispatcher
-     * @param \Exception|\Throwable $exception
+     * @param  Event  $event
+     * @param  Dispatcher  $dispatcher
+     * @param  \Exception|\Throwable  $exception
      * @return bool
      */
     public function beforeException($event, $dispatcher, $exception)
@@ -401,9 +405,9 @@ class Inertia extends Injectable
     /**
      * application:beforeSendResponse listener that adapts redirects and empty responses to the Inertia protocol.
      *
-     * @param \Phalcon\Events\Event $event
-     * @param \Phalcon\Mvc\Application $app
-     * @param \Phalcon\Http\ResponseInterface $response
+     * @param  Event  $event
+     * @param  Application  $app
+     * @param  ResponseInterface  $response
      * @return void
      */
     public function beforeSendResponse($event, $app, $response)
