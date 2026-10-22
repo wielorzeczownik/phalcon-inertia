@@ -178,6 +178,17 @@ Closures run only when their prop is actually sent. A partial reload that skips 
 
 There is also a global `inertia()` helper. `inertia('Users/Index', $props)` renders a page, and `inertia()` with no arguments returns the service.
 
+`$this->inertia` is resolved by the DI container, so IDEs don't know its type. Declare it on a base controller to get completion:
+
+```php
+/**
+ * @property \PhalconInertia\Inertia $inertia
+ */
+class ControllerBase extends \Phalcon\Mvc\Controller
+{
+}
+```
+
 ### Reading input
 
 The v3 client sends JSON, which `$request->getPost()` can't read on Phalcon 3.4. `input()` reads JSON, form and `PUT` bodies on every version. Its arguments match `getPost()`: name, filters, default and `notAllowEmpty`.
