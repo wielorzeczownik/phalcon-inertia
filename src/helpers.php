@@ -3,6 +3,11 @@
 use Phalcon\Di;
 
 if (! function_exists('inertia')) {
+    /**
+     * @param string|null $component
+     * @param array $props
+     * @return ($component is null ? \PhalconInertia\Inertia : \Phalcon\Http\Response)
+     */
     function inertia($component = null, array $props = [])
     {
         $di = class_exists('Phalcon\Di\Di') ? Di\Di::getDefault() : Di::getDefault();

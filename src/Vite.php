@@ -12,6 +12,11 @@ class Vite
 
     private $manifest;
 
+    /**
+     * @param string $publicPath
+     * @param string $buildDirectory
+     * @param string $assetUrl
+     */
     public function __construct($publicPath, $buildDirectory = 'build', $assetUrl = '/')
     {
         $this->publicPath = rtrim($publicPath, '/');
@@ -19,11 +24,23 @@ class Vite
         $this->assetUrl = rtrim($assetUrl, '/').'/';
     }
 
+    /**
+     * @return bool
+     */
     public function isHot()
     {
         return is_file($this->publicPath.'/hot');
     }
 
+    /**
+     * Script and stylesheet tags for the entries, from the dev server when it runs, else from the manifest.
+     *
+     * @param string|string[] $entries
+     * @param string|null $nonce
+     * @return string
+     *
+     * @throws Exception When the manifest or an entry is missing
+     */
     public function tags($entries, $nonce = null)
     {
         $entries = (array) $entries;
@@ -65,6 +82,12 @@ class Vite
         return implode("\n", $tags);
     }
 
+    /**
+     * @param string $path
+     * @return string
+     *
+     * @throws Exception When the manifest or the file is missing
+     */
     public function asset($path)
     {
         if ($this->isHot()) {
@@ -76,6 +99,11 @@ class Vite
         return $this->buildUrl($this->chunk($manifest, $path)['file']);
     }
 
+    /**
+     * Hash of the manifest, for the Inertia asset version.
+     *
+     * @return string
+     */
     public function version()
     {
         $path = $this->manifestPath();

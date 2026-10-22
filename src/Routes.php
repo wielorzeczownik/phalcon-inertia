@@ -18,12 +18,22 @@ class Routes extends Injectable
         'defaults' => [],
     ];
 
+    /**
+     * @param array|\Phalcon\Config $options url, only, except, groups and defaults
+     */
     public function __construct($options = [])
     {
         $options = is_object($options) && method_exists($options, 'toArray') ? $options->toArray() : (array) $options;
         $this->options = array_merge($this->options, $options);
     }
 
+    /**
+     * $only and $except take route names or groups, with * wildcards, and override the options.
+     *
+     * @param string|string[]|null $only
+     * @param string|string[]|null $except
+     * @return array
+     */
     public function toArray($only = null, $except = null)
     {
         $url = rtrim($this->options['url'] !== null ? $this->options['url'] : $this->requestUrl(), '/');
@@ -37,6 +47,11 @@ class Routes extends Injectable
         ];
     }
 
+    /**
+     * @param string|string[]|null $only
+     * @param string|string[]|null $except
+     * @return string
+     */
     public function toJson($only = null, $except = null)
     {
         $config = $this->toArray($only, $except);
@@ -46,6 +61,13 @@ class Routes extends Injectable
         return json_encode($config, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
     }
 
+    /**
+     * @param string|string[]|null $only
+     * @param string|string[]|null $except
+     * @param string|null $nonce
+     * @param bool $withFunction Also define the global route() function
+     * @return string
+     */
     public function script($only = null, $except = null, $nonce = null, $withFunction = true)
     {
         $nonce = $nonce === null ? '' : ' nonce="'.htmlspecialchars($nonce, ENT_QUOTES, 'UTF-8').'"';
@@ -54,6 +76,13 @@ class Routes extends Injectable
         return '<script'.$nonce.'>const PhalconRoutes = '.$this->toJson($only, $except).';'.$function.'</script>';
     }
 
+    /**
+     * TypeScript declaration of the route names and their parameters.
+     *
+     * @param string|string[]|null $only
+     * @param string|string[]|null $except
+     * @return string
+     */
     public function types($only = null, $except = null)
     {
         $list = [];

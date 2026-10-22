@@ -21,6 +21,10 @@ class AssertableInertia
         $this->path = $path;
     }
 
+    /**
+     * @param \Phalcon\Http\ResponseInterface $response
+     * @return self
+     */
     public static function fromResponse($response)
     {
         $content = (string) $response->getContent();
@@ -39,6 +43,10 @@ class AssertableInertia
         return new self($page);
     }
 
+    /**
+     * @param string $name
+     * @return $this
+     */
     public function component($name)
     {
         self::assert('assertSame', [$name, $this->page['component'], 'Unexpected Inertia component.']);
@@ -46,6 +54,10 @@ class AssertableInertia
         return $this;
     }
 
+    /**
+     * @param string $url
+     * @return $this
+     */
     public function url($url)
     {
         self::assert('assertSame', [$url, $this->page['url'], 'Unexpected Inertia page URL.']);
@@ -53,6 +65,10 @@ class AssertableInertia
         return $this;
     }
 
+    /**
+     * @param string $version
+     * @return $this
+     */
     public function version($version)
     {
         self::assert('assertSame', [(string) $version, (string) $this->page['version'], 'Unexpected Inertia asset version.']);
@@ -60,6 +76,15 @@ class AssertableInertia
         return $this;
     }
 
+    /**
+     * Assert the prop exists, optionally with $count items. $callback gets the prop, or its first item
+     * when $count is given, scoped as another AssertableInertia.
+     *
+     * @param string $key Dot notation
+     * @param int|callable|null $count
+     * @param callable|null $callback
+     * @return $this
+     */
     public function has($key, $count = null, $callback = null)
     {
         if ($count instanceof \Closure) {
@@ -88,6 +113,11 @@ class AssertableInertia
         return $this;
     }
 
+    /**
+     * Allow props in the current scope that were not asserted.
+     *
+     * @return $this
+     */
     public function etc()
     {
         $this->etc = true;
@@ -95,6 +125,11 @@ class AssertableInertia
         return $this;
     }
 
+    /**
+     * @param string $key Dot notation
+     * @param mixed $expected Value, or a callback that returns true
+     * @return $this
+     */
     public function where($key, $expected)
     {
         $value = $this->find($key, $found);
@@ -109,6 +144,10 @@ class AssertableInertia
         return $this;
     }
 
+    /**
+     * @param string $key Dot notation
+     * @return $this
+     */
     public function missing($key)
     {
         $this->find($key, $found);
@@ -117,6 +156,10 @@ class AssertableInertia
         return $this;
     }
 
+    /**
+     * @param string|null $key Dot notation
+     * @return mixed
+     */
     public function prop($key = null)
     {
         if ($key === null) {
@@ -126,6 +169,9 @@ class AssertableInertia
         return $this->find($key, $found);
     }
 
+    /**
+     * @return array
+     */
     public function toArray()
     {
         return $this->page;
