@@ -12,6 +12,17 @@
         "(?<depName>php):(?<currentValue>\\d+\\.\\d+-cli)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/validate\\.yml$/",
+        "/^scripts/test-matrix\\.sh$/",
+        "/^docker/Dockerfile$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n[^\\n]*?(?:_VERSION=|[a-z][a-z_-]*: )(?<currentValue>[^\\s\"]+)"
+      ]
     }
   ],
   "packageRules": [
@@ -30,12 +41,29 @@
       "semanticCommitType": "test"
     },
     {
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": [
+        "phalcon/cphalcon",
+        "phalcon/phalcon",
+        "phpunit/phpunit"
+      ],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["phalcon/cphalcon", "phalcon/phalcon"],
+      "groupName": "phalcon test versions",
+      "semanticCommitType": "test"
+    },
+    {
       "matchPackageNames": ["laravel/pint"],
       "allowedVersions": "<1.30.5"
     },
     {
       "matchPackageNames": ["phpunit/phpunit"],
-      "allowedVersions": "<12.0.0"
+      "allowedVersions": "<12.0.0",
+      "groupName": "phpunit"
     },
     {
       "matchPackageNames": ["@playwright/test", "mcr.microsoft.com/playwright"],
@@ -43,6 +71,10 @@
     },
     {
       "matchFileNames": ["e2e/**"],
+      "semanticCommitType": "test"
+    },
+    {
+      "matchFileNames": ["docker/**"],
       "semanticCommitType": "test"
     }
   ]
