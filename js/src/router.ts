@@ -49,6 +49,9 @@ function isSubset(subset: Parameters, full: Parameters): boolean {
   });
 }
 
+/**
+Result of `route()`. With a route name it converts to the URL, without one it inspects the current URL.
+*/
 export default class Router extends String {
   private readonly config: AbsoluteConfig;
   private readonly route?: Route;
@@ -214,13 +217,24 @@ export default class Router extends String {
     return this.toString();
   }
 
+  /**
+  Parameters and query of the current URL. Values are strings, as they come from the URL.
+  */
   get params(): Parameters {
     const { params, query } = this.unresolve();
 
     return { ...params, ...query };
   }
 
+  /**
+  Name of the route matching the current URL, `undefined` when none does.
+  */
   current(): string | undefined;
+  /**
+  Whether the current URL matches the route.
+  @param name Route name, `*` matches any part of it, e.g. `posts.*`.
+  @param params Values that the current parameters and query must contain.
+  */
   current(name: string, params?: unknown): boolean;
   // eslint-disable-next-line sonarjs/function-return-type -- the overloads give each call one return type
   current(name?: string, params?: unknown): string | boolean | undefined {
@@ -252,6 +266,9 @@ export default class Router extends String {
     return isEmpty || isSubset(parsed, routeParams);
   }
 
+  /**
+  Whether the route is in the route list.
+  */
   has(name: string): boolean {
     return Object.hasOwn(this.config.routes, name);
   }
