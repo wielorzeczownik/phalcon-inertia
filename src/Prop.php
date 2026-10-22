@@ -39,6 +39,10 @@ class Prop
         $this->value = $value;
     }
 
+    /**
+     * @param  mixed  $value
+     * @return Prop
+     */
     public static function always($value)
     {
         $prop = new self($value);
@@ -47,6 +51,10 @@ class Prop
         return $prop;
     }
 
+    /**
+     * @param  callable  $callback
+     * @return Prop
+     */
     public static function optional($callback)
     {
         $prop = new self($callback);
@@ -55,11 +63,21 @@ class Prop
         return $prop;
     }
 
+    /**
+     * @param  mixed  $value
+     * @return Prop
+     */
     public static function value($value)
     {
         return new self($value);
     }
 
+    /**
+     * @param  callable  $callback
+     * @param  string  $group  Props in the same group load in one request
+     * @param  bool  $rescue  Log a throwing callback and drop the prop instead of failing the request
+     * @return Prop
+     */
     public static function defer($callback, $group = 'default', $rescue = false)
     {
         $prop = new self($callback);
@@ -69,6 +87,12 @@ class Prop
         return $prop;
     }
 
+    /**
+     * @param  mixed  $value  Phalcon paginator page, or data with the items under $wrapper
+     * @param  string  $wrapper
+     * @param  array|null  $metadata  currentPage, previousPage and nextPage, required without a paginator
+     * @return Prop
+     */
     public static function scroll($value, $wrapper = 'data', $metadata = null)
     {
         $prop = new self($value);
@@ -77,6 +101,10 @@ class Prop
         return $prop;
     }
 
+    /**
+     * @param  mixed  $value
+     * @return Prop
+     */
     public static function merge($value)
     {
         $prop = new self($value);
@@ -84,6 +112,10 @@ class Prop
         return $prop->append();
     }
 
+    /**
+     * @param  mixed  $value
+     * @return Prop
+     */
     public static function deepMerge($value)
     {
         $prop = new self($value);
@@ -91,6 +123,9 @@ class Prop
         return $prop->deep();
     }
 
+    /**
+     * @return $this
+     */
     public function append()
     {
         $this->merge = self::APPEND;
@@ -98,6 +133,9 @@ class Prop
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function prepend()
     {
         $this->merge = self::PREPEND;
@@ -105,6 +143,9 @@ class Prop
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     public function deep()
     {
         $this->merge = self::DEEP;
@@ -112,6 +153,12 @@ class Prop
         return $this;
     }
 
+    /**
+     * Merge items that share this field instead of appending duplicates.
+     *
+     * @param  string  $field
+     * @return $this
+     */
     public function matchOn($field)
     {
         $this->matchOn[] = (string) $field;
@@ -119,6 +166,10 @@ class Prop
         return $this;
     }
 
+    /**
+     * @param  bool  $once
+     * @return $this
+     */
     public function once($once = true)
     {
         $this->once = (bool) $once;
@@ -126,6 +177,12 @@ class Prop
         return $this;
     }
 
+    /**
+     * Share the once cache between props that use the same key.
+     *
+     * @param  string  $key
+     * @return $this
+     */
     public function key($key)
     {
         $this->once = true;
@@ -134,6 +191,12 @@ class Prop
         return $this;
     }
 
+    /**
+     * Expire the once prop at a time, after an interval, or after a number of seconds.
+     *
+     * @param  \DateTimeInterface|\DateInterval|int  $time
+     * @return $this
+     */
     public function until($time)
     {
         $this->once = true;
@@ -146,6 +209,12 @@ class Prop
         return $this;
     }
 
+    /**
+     * Resolve a once prop again even when the client already has it.
+     *
+     * @param  bool  $fresh
+     * @return $this
+     */
     public function fresh($fresh = true)
     {
         $this->fresh = (bool) $fresh;
@@ -153,61 +222,98 @@ class Prop
         return $this;
     }
 
+    /**
+     * @return mixed
+     */
     public function get()
     {
         return $this->value;
     }
 
+    /**
+     * @return bool
+     */
     public function isAlways()
     {
         return $this->always;
     }
 
+    /**
+     * @return bool
+     */
     public function isOptional()
     {
         return $this->optional;
     }
 
+    /**
+     * @return string|null
+     */
     public function group()
     {
         return $this->group;
     }
 
+    /**
+     * @return string|null One of APPEND, PREPEND or DEEP
+     */
     public function mergeMode()
     {
         return $this->merge;
     }
 
+    /**
+     * @return string[]
+     */
     public function matchFields()
     {
         return $this->matchOn;
     }
 
+    /**
+     * @return bool
+     */
     public function shouldRescue()
     {
         return $this->rescue;
     }
 
+    /**
+     * @return bool
+     */
     public function isOnce()
     {
         return $this->once;
     }
 
+    /**
+     * @param  string  $default
+     * @return string
+     */
     public function onceKey($default)
     {
         return $this->onceKey !== null ? $this->onceKey : (string) $default;
     }
 
+    /**
+     * @return int|null Milliseconds since the epoch
+     */
     public function expiresAt()
     {
         return $this->expiresAt;
     }
 
+    /**
+     * @return bool
+     */
     public function isFresh()
     {
         return $this->fresh;
     }
 
+    /**
+     * @return array|null
+     */
     public function scrollOptions()
     {
         return $this->scroll;
