@@ -109,7 +109,7 @@ $di->register(new InertiaServiceProvider([
 $application->setEventsManager($di->getShared('eventsManager'));
 ```
 
-All options are listed under [Configuration](#configuration). The provider implements `Phalcon\Di\ServiceProviderInterface` on every supported version, from 3.4 to 5.
+All options are listed under [Configuration](#configuration). The provider implements `Phalcon\Di\ServiceProviderInterface` on every supported version, from 3.4 to 6.
 
 <details>
 <summary>Registering the services by hand</summary>
