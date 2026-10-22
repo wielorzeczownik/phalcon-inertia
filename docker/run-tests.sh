@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-php -r 'echo "PHP ", PHP_VERSION, ", Phalcon ", phpversion("phalcon"), PHP_EOL;'
+echo '<?php echo "PHP ", PHP_VERSION, ", Phalcon ", phpversion("phalcon") ?: Composer\InstalledVersions::getPrettyVersion("phalcon/phalcon"), PHP_EOL;' | php
 
 case "$(phpunit --version)" in
 *"PHPUnit 5."*) exec phpunit --no-configuration --bootstrap tests/bootstrap.php tests ;;

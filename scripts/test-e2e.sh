@@ -7,7 +7,7 @@ compose=(docker compose -f "$root/e2e/compose.yml")
 if [[ $# -gt 0 ]]; then
   variants=("$@")
 else
-  variants=(php56-phalcon34 php85-phalcon5)
+  variants=(php56-phalcon34 php85-phalcon6)
 fi
 
 export VARIANT="${variants[0]}"

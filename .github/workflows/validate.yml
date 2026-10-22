@@ -215,6 +215,11 @@ jobs:
             phalcon: 5.23.0
             phpunit: 11.5.57
             e2e: true
+          - variant: php85-phalcon6
+            php-image: php:8.5-cli@sha256:8e5d746f87655d89573e76d2b9125ed1b1578e47d3c466a2b2fdfc35593d9b41
+            phalcon: 6.0.0RC4
+            phpunit: 11.5.57
+            e2e: true
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
