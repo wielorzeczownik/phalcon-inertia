@@ -64,24 +64,23 @@ It also ships `route()`, a port of [Ziggy](https://github.com/tighten/ziggy) for
 
 ```bash
 composer require wielorzeczownik/phalcon-inertia
-npm install vue @inertiajs/vue3 vite @vitejs/plugin-vue laravel-vite-plugin
+npm install vite laravel-vite-plugin
 ```
 
-The frontend needs the Inertia v3 client (`@inertiajs/vue3`, `/react` or `/svelte` 3.x). Older clients won't start: they look for the first page in a `data-page` attribute, while v3 puts it in a `<script type="application/json">` element.
+Install the Inertia v3 client for your framework (`@inertiajs/vue3`, `/react` or `/svelte` 3.x) and its Vite plugin. Older clients won't start: they look for the first page in a `data-page` attribute, while v3 puts it in a `<script type="application/json">` element.
 
 `laravel-vite-plugin` works without Laravel. The `Vite` helper reads the `public/hot` file it writes in development and the `public/build` directory it builds to.
 
 ```js
 // vite.config.js
 import path from 'node:path';
-import vue from '@vitejs/plugin-vue';
 import laravel from 'laravel-vite-plugin';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [
     laravel({ input: ['resources/js/app.js'], ssr: 'resources/js/ssr.js' }),
-    vue(),
+    // your framework plugin, e.g. vue(), react() or svelte()
   ],
   resolve: {
     alias: {
@@ -93,27 +92,7 @@ export default defineConfig({
 });
 ```
 
-```js
-// resources/js/app.js
-import { createInertiaApp } from '@inertiajs/vue3';
-import { RouteVue } from 'phalcon-routes';
-import { createSSRApp, h } from 'vue';
-
-createInertiaApp({
-  resolve: (name) =>
-    import.meta.glob('./Pages/**/*.vue', { eager: true })[
-      `./Pages/${name}.vue`
-    ],
-  setup({ el, App, props, plugin }) {
-    createSSRApp({ render: () => h(App, props) })
-      .use(plugin)
-      .use(RouteVue)
-      .mount(el);
-  },
-});
-```
-
-For a complete example with SSR, see the [e2e app](e2e).
+Then create `resources/js/app.js` as in the Inertia [client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup) and add `route()` for [your framework](#javascript-frameworks). For a complete Vue example with SSR, see the [e2e app](e2e).
 
 ## Setup
 
@@ -630,16 +609,10 @@ Types for `route()` itself ship with the package. Map the alias in `tsconfig.jso
 }
 ```
 
-For `route()` in Vue templates, or for the global one from `script()`, declare it once:
+For the global `route()` from `script()`, declare it once:
 
 ```ts
 import type { route as routeFn } from 'phalcon-routes';
-
-declare module 'vue' {
-  interface ComponentCustomProperties {
-    route: typeof routeFn;
-  }
-}
 
 declare global {
   var route: typeof routeFn;
@@ -663,10 +636,13 @@ file_put_contents(BASE_PATH.'/resources/js/routes.json', $di->getShared('routes'
 ```
 
 ```js
+import { route } from 'phalcon-routes';
 import routes from './routes.json';
 
-app.use(RouteVue, routes);
+route('posts.show', post, undefined, routes);
 ```
+
+The framework helpers below take the same config once, so you don't pass it on every call.
 
 With SSR, the server needs the config as well. See [Under SSR](#under-ssr).
 
@@ -725,6 +701,18 @@ import routes from './routes.json';
 createApp(App).use(RouteVue, routes);
 ```
 
+With TypeScript, declare `route()` for templates:
+
+```ts
+import type { route as routeFn } from 'phalcon-routes';
+
+declare module 'vue' {
+  interface ComponentCustomProperties {
+    route: typeof routeFn;
+  }
+}
+```
+
 ### React
 
 `useRoute()` returns `route()`. With `script()` in the root view it takes no arguments:
@@ -767,7 +755,7 @@ $di->getShared('inertia')->share('routes', function () use ($di) {
 });
 ```
 
-In the SSR entry, pass it to the plugin together with a `location`, which `current()` and `params` need. The client entry keeps `.use(RouteVue)`:
+In the SSR entry, pass it on together with a `location`, which `current()` and `params` need. With Vue, the client entry keeps `.use(RouteVue)`:
 
 ```js
 // resources/js/ssr.js
@@ -776,7 +764,7 @@ setup({ App, props, plugin }) {
 
   return createSSRApp({ render: () => h(App, props) })
     .use(plugin)
-    .use(RouteVue, { ...routes, location: new URL(page.url, routes.url) });
+    .use(RouteVue, { ...routes, location: new URL(props.initialPage.url, routes.url) });
 },
 ```
 
