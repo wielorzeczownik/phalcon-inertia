@@ -27,6 +27,9 @@ function isSubset(subset, full) {
             : isLooselyEqual(value, current);
     });
 }
+/**
+Result of `route()`. With a route name it converts to the URL, without one it inspects the current URL.
+*/
 export default class Router extends String {
     config;
     route;
@@ -149,6 +152,9 @@ export default class Router extends String {
     valueOf() {
         return this.toString();
     }
+    /**
+    Parameters and query of the current URL. Values are strings, as they come from the URL.
+    */
     get params() {
         const { params, query } = this.unresolve();
         return { ...params, ...query };
@@ -170,6 +176,9 @@ export default class Router extends String {
             Object.values(routeParams).every((value) => value === undefined);
         return isEmpty || isSubset(parsed, routeParams);
     }
+    /**
+    Whether the route is in the route list.
+    */
     has(name) {
         return Object.hasOwn(this.config.routes, name);
     }

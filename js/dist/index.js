@@ -11,6 +11,10 @@ function build(name, params, isAbsolute, config) {
 function bind(defaultConfig) {
     return ((name, params, isAbsolute, config = defaultConfig) => build(name, params, isAbsolute, config));
 }
+/**
+Vue plugin that adds `route()` to templates and, on Vue 3, to `inject('route')`.
+Its options are the route config, defaults to the global `PhalconRoutes`.
+*/
 export const RouteVue = {
     install(app, options) {
         const bound = bind(options);
@@ -20,6 +24,11 @@ export const RouteVue = {
         }
     },
 };
+/**
+Returns `route()` bound to the given config, or to the global `PhalconRoutes`.
+
+@throws When neither config is available.
+*/
 export function useRoute(defaultConfig) {
     if (!defaultConfig && !globalConfig()) {
         throw new Error('Route error: missing configuration. Print Routes::script() or pass the config into useRoute().');
