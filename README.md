@@ -92,7 +92,7 @@ export default defineConfig({
 });
 ```
 
-Then create `resources/js/app.js` as in the Inertia [client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup) and add `route()` for [your framework](#javascript-frameworks). For a complete Vue example with SSR, see the [e2e app](e2e).
+Then create `resources/js/app.js` as in the Inertia [client-side setup](https://inertiajs.com/docs/v3/installation/client-side-setup) and add `route()` for [your framework](#javascript-frameworks). For complete Vue, React and Svelte examples with SSR, see the [e2e app](e2e/resources/js).
 
 ## Setup
 
@@ -779,7 +779,7 @@ setup({ App, props, plugin }) {
 },
 ```
 
-For React and Svelte, pass the same object to `useRoute()` in the SSR render.
+For React and Svelte, pass the same object to `useRoute()` in the SSR render, for example from `usePage()` as the e2e app does for [React](e2e/resources/js/react/route.js) and [Svelte](e2e/resources/js/svelte/route.js).
 
 ### SPAs or separate repos
 

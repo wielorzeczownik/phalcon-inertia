@@ -17,15 +17,21 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"${compose[@]}" run --rm node sh -c 'npm ci --no-audit --no-fund && npm run build'
+read -ra clients <<<"${CLIENTS:-vue react svelte}"
 
-for variant in "${variants[@]}"; do
-  echo "==> e2e $variant"
-  if [[ -z "${SKIP_IMAGE_BUILD:-}" ]]; then
-    "$root/scripts/test-matrix.sh" "$variant"
-  fi
-  export VARIANT="$variant"
-  "${compose[@]}" up --detach --wait php ssr
-  "${compose[@]}" run --rm node npx playwright test
-  "${compose[@]}" rm --stop --force php >/dev/null
+"${compose[@]}" run --rm node npm ci --no-audit --no-fund
+
+if [[ -z "${SKIP_IMAGE_BUILD:-}" ]]; then
+  "$root/scripts/test-matrix.sh" "${variants[@]}"
+fi
+
+for client in "${clients[@]}"; do
+  "${compose[@]}" run --rm -e CLIENT="$client" node npm run build
+  for variant in "${variants[@]}"; do
+    echo "==> e2e $variant $client"
+    export VARIANT="$variant"
+    "${compose[@]}" up --detach --wait php ssr
+    "${compose[@]}" run --rm node npx playwright test
+    "${compose[@]}" rm --stop --force php ssr >/dev/null
+  done
 done
