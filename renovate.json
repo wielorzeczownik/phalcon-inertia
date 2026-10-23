@@ -42,13 +42,15 @@
     },
     {
       "matchManagers": ["custom.regex"],
-      "matchPackageNames": [
-        "phalcon/cphalcon",
-        "phalcon/phalcon",
-        "phpunit/phpunit"
-      ],
+      "matchPackageNames": ["phalcon/cphalcon", "phpunit/phpunit"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    },
+    {
+      "matchManagers": ["custom.regex"],
+      "matchPackageNames": ["phalcon/phalcon"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["upstream drift"]
     },
     {
       "matchManagers": ["custom.regex"],
