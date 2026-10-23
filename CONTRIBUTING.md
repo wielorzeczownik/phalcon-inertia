@@ -26,7 +26,7 @@ An Inertia.js server adapter for Phalcon 3.4 to 5 on PHP 5.6 to 8.5. Library cod
 │   └── Vite.php         script and style tags from the Vite manifest or dev server
 ├── js/                 route() helper in TypeScript, built into the committed js/dist
 ├── tests/               PHPUnit tests, written to run on PHPUnit 5.7 through 11
-├── e2e/                 Phalcon, Vue and SSR example app with Playwright tests
+├── e2e/                 Phalcon example app in Vue, React and Svelte with SSR and Playwright tests
 ├── docker/              one test image per PHP and Phalcon pair, and its test runner
 └── scripts/
     ├── test-matrix.sh   builds and runs every test image
@@ -50,7 +50,7 @@ The [e2e app](e2e) doubles as a demo. With PHP and the Phalcon extension install
 
 ```bash
 npm --prefix e2e ci
-npm --prefix e2e run build
+npm --prefix e2e run build   # Vue, or CLIENT=react / CLIENT=svelte
 node e2e/bootstrap/ssr/ssr.js &
 SSR_URL=http://127.0.0.1:13714 php -S 127.0.0.1:8000 -t e2e/public e2e/public/index.php
 ```
@@ -69,8 +69,9 @@ composer lint
 composer test:matrix
 composer test:matrix -- php56-phalcon34
 
-# Playwright against the e2e app, oldest and newest pair by default
+# Playwright against the e2e app, oldest and newest pair by default, every client
 composer test:e2e
+CLIENTS=react composer test:e2e
 composer test:e2e -- php73-phalcon34
 
 # route() helper
