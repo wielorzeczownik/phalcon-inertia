@@ -5,6 +5,7 @@ namespace PhalconInertia\Tests;
 use Phalcon\Paginator\Adapter\NativeArray;
 use PhalconInertia\Page;
 use PhalconInertia\Prop;
+use PhalconInertia\Tests\Fixtures\ScrollMetadata;
 use PhalconInertia\Tests\Fixtures\UserResource;
 
 class PageTest extends TestCase
@@ -110,17 +111,59 @@ class PageTest extends TestCase
         $this->assertSame([9], $page['props']->reset);
     }
 
-    public function test_deferred_props_can_merge_once_loaded()
+    public function test_props_left_out_of_the_first_visit_still_list_merge_and_once_metadata()
     {
-        $prop = Prop::defer(function () {
-            return [1];
-        })->append();
+        $props = [
+            'comments' => Prop::defer(function () {
+                return [1];
+            })->append(),
+            'plans' => Prop::optional(function () {
+                return 1;
+            })->once(),
+        ];
 
-        $first = $this->build(['comments' => $prop]);
-        $partial = $this->build(['comments' => $prop], $this->partial(['X-Inertia-Partial-Data' => 'comments']));
+        $first = $this->build($props);
+        $partial = $this->build($props, $this->partial(['X-Inertia-Partial-Data' => 'comments']));
 
-        $this->assertArrayNotHasKey('mergeProps', $first);
+        $this->assertSame([], array_keys((array) $first['props']));
+        $this->assertSame(['comments'], $first['mergeProps']);
+        $this->assertSame('plans', $first['onceProps']->plans['prop']);
         $this->assertSame(['comments'], $partial['mergeProps']);
+        $this->assertArrayNotHasKey('onceProps', $partial);
+    }
+
+    public function test_scroll_props_can_be_deferred()
+    {
+        $calls = 0;
+        $prop = Prop::scroll(function () use (&$calls) {
+            $calls++;
+
+            return ['items' => [1]];
+        }, 'items', ['currentPage' => 1])->defer('feed');
+
+        $first = $this->build(['posts' => $prop]);
+        $this->assertSame(0, $calls);
+        $partial = $this->build(['posts' => $prop], $this->partial(['X-Inertia-Partial-Data' => 'posts']));
+
+        $this->assertSame(1, $calls);
+        $this->assertSame(['feed' => ['posts']], $first['deferredProps']);
+        $this->assertSame(['posts.items'], $first['mergeProps']);
+        $this->assertArrayNotHasKey('scrollProps', $first);
+        $this->assertSame('{"posts":{"items":[1]}}', json_encode($partial['props']));
+        $this->assertSame(1, $partial['scrollProps']->posts['currentPage']);
+    }
+
+    public function test_prop_defer_is_a_factory_and_a_modifier()
+    {
+        $factory = Prop::defer('strtoupper', 'aside', true);
+        $modifier = Prop::merge([])->defer();
+
+        $this->assertSame('aside', $factory->group());
+        $this->assertTrue($factory->shouldRescue());
+        $this->assertSame('default', $modifier->group());
+        $this->assertSame(Prop::APPEND, $modifier->mergeMode());
+        $this->expectException('BadMethodCallException');
+        Prop::nope();
     }
 
     public function test_nested_deferred_props_wait_for_their_own_partial_reload()
@@ -350,6 +393,19 @@ class PageTest extends TestCase
         $this->assertArrayNotHasKey('mergeProps', $reset);
         $this->assertTrue($reset['scrollProps']->feed['reset']);
         $this->assertSame(['pageName' => 'page', 'previousPage' => 2, 'nextPage' => null, 'currentPage' => 3, 'reset' => false], $prepend['scrollProps']->feed);
+    }
+
+    public function test_scroll_metadata_can_come_from_a_callable_or_an_object()
+    {
+        $page = $this->build([
+            'feed' => Prop::scroll(['items' => [1]], 'items', function ($value) {
+                return new ScrollMetadata(count($value['items']));
+            }),
+            'log' => Prop::scroll(['items' => [1]], 'items', new ScrollMetadata(4)),
+        ]);
+
+        $this->assertSame(['pageName' => 'cursor', 'previousPage' => null, 'nextPage' => 2, 'currentPage' => 1, 'reset' => false], $page['scrollProps']->feed);
+        $this->assertSame(4, $page['scrollProps']->log['currentPage']);
     }
 
     public function test_scroll_props_need_a_paginator_or_metadata()

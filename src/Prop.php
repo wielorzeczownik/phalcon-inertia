@@ -2,6 +2,10 @@
 
 namespace PhalconInertia;
 
+/**
+ * @method static Prop defer(callable $callback, string $group = 'default', bool $rescue = false) Load the prop right after the page renders
+ * @method Prop defer(string $group = 'default') Load this prop right after the page renders, e.g. Prop::scroll($page)->defer()
+ */
 class Prop
 {
     const APPEND = 'append';
@@ -73,24 +77,46 @@ class Prop
     }
 
     /**
-     * @param  callable  $callback
-     * @param  string  $group  Props in the same group load in one request
-     * @param  bool  $rescue  Log a throwing callback and drop the prop instead of failing the request
+     * defer() is both a factory, Prop::defer($callback, $group, $rescue), and a modifier,
+     * $prop->defer($group). PHP can't declare a static and an instance method with one name.
+     *
+     * @param  string  $name
+     * @param  array  $arguments
      * @return Prop
      */
-    public static function defer($callback, $group = 'default', $rescue = false)
+    public static function __callStatic($name, $arguments)
     {
-        $prop = new self($callback);
-        $prop->group = (string) $group;
-        $prop->rescue = (bool) $rescue;
+        if ($name !== 'defer') {
+            throw new \BadMethodCallException('Call to undefined method '.__CLASS__.'::'.$name.'()');
+        }
 
-        return $prop;
+        $prop = new self(isset($arguments[0]) ? $arguments[0] : null);
+        $prop->rescue = isset($arguments[2]) && $arguments[2];
+
+        return $prop->__call('defer', array_slice($arguments, 1, 1));
+    }
+
+    /**
+     * @param  string  $name
+     * @param  array  $arguments
+     * @return $this
+     */
+    public function __call($name, $arguments)
+    {
+        if ($name !== 'defer') {
+            throw new \BadMethodCallException('Call to undefined method '.__CLASS__.'::'.$name.'()');
+        }
+
+        $this->group = isset($arguments[0]) ? (string) $arguments[0] : 'default';
+
+        return $this;
     }
 
     /**
      * @param  mixed  $value  Phalcon paginator page, or data with the items under $wrapper
      * @param  string  $wrapper
-     * @param  array|null  $metadata  currentPage, previousPage and nextPage, required without a paginator
+     * @param  array|ProvidesScrollMetadata|callable|null  $metadata  currentPage, previousPage and nextPage, required
+     *                                                                without a paginator. A callable gets the value.
      * @return Prop
      */
     public static function scroll($value, $wrapper = 'data', $metadata = null)
