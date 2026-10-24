@@ -11,11 +11,12 @@
   <button type="button" onclick={() => router.reload({ only: ['counter'] })}>
     Refresh counter
   </button>
-  <Deferred data="stats">
+  <p data-testid="stats-title">{stats.title}</p>
+  <Deferred data="stats.visits">
     {#snippet fallback()}
       <p>Loading stats</p>
     {/snippet}
-    <p id="stats" data-testid="stats">Visits: {stats?.visits}</p>
+    <p id="stats" data-testid="stats">Visits: {stats.visits}</p>
   </Deferred>
   <Deferred data="permissions">
     {#snippet fallback()}

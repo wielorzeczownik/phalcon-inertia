@@ -122,6 +122,77 @@ class PageTest extends TestCase
         $this->assertSame(['comments'], $partial['mergeProps']);
     }
 
+    public function test_nested_deferred_props_wait_for_their_own_partial_reload()
+    {
+        $calls = 0;
+        $props = ['user' => [
+            'name' => 'Ada',
+            'permissions' => Prop::defer(function () use (&$calls) {
+                $calls++;
+
+                return ['edit'];
+            }),
+        ]];
+
+        $first = $this->build($props);
+        $partial = $this->build($props, $this->partial(['X-Inertia-Partial-Data' => 'user.permissions']));
+
+        $this->assertSame('{"user":{"name":"Ada"}}', json_encode($first['props']));
+        $this->assertSame(['default' => ['user.permissions']], $first['deferredProps']);
+        $this->assertSame('{"user":{"permissions":["edit"]}}', json_encode($partial['props']));
+        $this->assertSame(1, $calls);
+    }
+
+    public function test_partial_paths_select_and_drop_nested_keys()
+    {
+        $props = [
+            'user' => ['name' => 'Ada', 'email' => 'ada@example.com'],
+            'team' => function () {
+                return ['name' => 'Core', 'size' => 3];
+            },
+        ];
+
+        $only = $this->build($props, $this->partial(['X-Inertia-Partial-Data' => 'user.name,team.name']));
+        $except = $this->build($props, $this->partial(['X-Inertia-Partial-Except' => 'user.email,team']));
+
+        $this->assertSame('{"user":{"name":"Ada"},"team":{"name":"Core","size":3}}', json_encode($only['props']));
+        $this->assertSame('{"user":{"name":"Ada"}}', json_encode($except['props']));
+    }
+
+    public function test_dot_keys_unpack_into_nested_props()
+    {
+        $page = $this->build([
+            'user' => function () {
+                return ['name' => 'Ada'];
+            },
+            'user.permissions' => Prop::defer(function () {
+                return ['edit'];
+            }),
+            'meta.title' => 'Users',
+        ]);
+
+        $this->assertSame('{"user":{"name":"Ada"},"meta":{"title":"Users"}}', json_encode($page['props']));
+        $this->assertSame(['default' => ['user.permissions']], $page['deferredProps']);
+    }
+
+    public function test_nested_props_report_metadata_by_path()
+    {
+        $page = $this->build(['feed' => [
+            'posts' => Prop::merge([1])->matchOn('id'),
+            'plans' => Prop::value(1)->once(),
+        ]]);
+        $partial = $this->build(['feed' => [
+            'posts' => Prop::merge([1]),
+            'plans' => Prop::value(1)->once(),
+        ]], $this->partial(['X-Inertia-Partial-Data' => 'feed.plans']));
+
+        $this->assertSame(['feed.posts'], $page['mergeProps']);
+        $this->assertSame(['feed.posts.id'], $page['matchPropsOn']);
+        $this->assertSame('feed.plans', $page['onceProps']->{'feed.plans'}['prop']);
+        $this->assertArrayNotHasKey('mergeProps', $partial);
+        $this->assertSame(['feed.plans'], array_keys((array) $partial['onceProps']));
+    }
+
     public function test_history_flags_are_present_only_when_true()
     {
         $default = $this->build([]);
