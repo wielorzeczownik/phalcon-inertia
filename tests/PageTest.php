@@ -196,12 +196,34 @@ class PageTest extends TestCase
     public function test_history_flags_are_present_only_when_true()
     {
         $default = $this->build([]);
-        $flagged = $this->build([], [], ['encryptHistory' => true, 'clearHistory' => true]);
+        $flagged = $this->build([], [], ['encryptHistory' => true, 'clearHistory' => true, 'preserveFragment' => true]);
 
         $this->assertArrayNotHasKey('encryptHistory', $default);
         $this->assertArrayNotHasKey('clearHistory', $default);
+        $this->assertArrayNotHasKey('preserveFragment', $default);
         $this->assertTrue($flagged['encryptHistory']);
         $this->assertTrue($flagged['clearHistory']);
+        $this->assertTrue($flagged['preserveFragment']);
+    }
+
+    public function test_big_integers_are_wrapped_only_when_preserved()
+    {
+        $big = PHP_INT_SIZE === 8 ? (int) '9007199254740993' : PHP_INT_MAX;
+        $props = ['id' => $big, 'nested' => (object) ['ids' => [-$big, 1]], 'date' => new \DateTime('2026-01-01', new \DateTimeZone('UTC'))];
+
+        $plain = $this->build($props, [], ['flash' => ['id' => $big]]);
+        $preserved = $this->build($props, [], ['flash' => ['id' => $big], 'preserveBigIntegers' => true]);
+        $json = json_encode($preserved);
+
+        $this->assertArrayNotHasKey('preserveBigIntegers', $plain);
+        $this->assertSame($big, $plain['props']->id);
+        $this->assertTrue($preserved['preserveBigIntegers']);
+        if (PHP_INT_SIZE === 8) {
+            $this->assertHasText('"id":{"$bigint":"9007199254740993"}', $json);
+            $this->assertHasText('"ids":[{"$bigint":"-9007199254740993"},1]', $json);
+            $this->assertHasText('"flash":{"id":{"$bigint":"9007199254740993"}}', $json);
+        }
+        $this->assertHasText('"date":{"date":"2026-01-01', $json);
     }
 
     public function test_shared_props_and_flash_are_present_only_when_set()

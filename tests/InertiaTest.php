@@ -256,18 +256,34 @@ class InertiaTest extends TestCase
         $this->assertSame(['auth', 'app'], $page['sharedProps']);
     }
 
+    public function test_share_once_shares_a_once_prop()
+    {
+        $inertia = $this->inertia(self::inertiaServer());
+        $inertia->shareOnce('plans', function () {
+            return [1];
+        })->until(60);
+
+        $page = json_decode($inertia->render('Users/Index')->getContent(), true);
+
+        $this->assertSame([1], $page['props']['plans']);
+        $this->assertSame('plans', $page['onceProps']['plans']['prop']);
+        $this->assertNotNull($page['onceProps']['plans']['expiresAt']);
+    }
+
     public function test_flash_and_clear_history_apply_to_one_render()
     {
         $inertia = $this->inertia(self::inertiaServer());
-        $inertia->flash('status', 'saved')->clearHistory();
+        $inertia->flash('status', 'saved')->clearHistory()->preserveFragment();
 
         $first = json_decode($inertia->render('Users/Index')->getContent(), true);
         $second = json_decode($inertia->render('Users/Index')->getContent(), true);
 
         $this->assertSame(['status' => 'saved'], $first['flash']);
         $this->assertTrue($first['clearHistory']);
+        $this->assertTrue($first['preserveFragment']);
         $this->assertArrayNotHasKey('flash', $second);
         $this->assertArrayNotHasKey('clearHistory', $second);
+        $this->assertArrayNotHasKey('preserveFragment', $second);
     }
 
     public function test_encrypt_history_is_configurable()
@@ -275,6 +291,10 @@ class InertiaTest extends TestCase
         $page = json_decode($this->inertia(self::inertiaServer())->encryptHistory()->render('Users/Index')->getContent(), true);
 
         $this->assertTrue($page['encryptHistory']);
+
+        $page = json_decode($this->inertia(self::inertiaServer())->preserveBigIntegers()->render('Users/Index')->getContent(), true);
+
+        $this->assertTrue($page['preserveBigIntegers']);
     }
 
     public function test_ssr_output_replaces_the_client_markup()

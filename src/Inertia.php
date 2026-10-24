@@ -18,6 +18,8 @@ class Inertia extends Injectable
 
     const CLEAR_HISTORY = '_inertia_clear_history';
 
+    const PRESERVE_FRAGMENT = '_inertia_preserve_fragment';
+
     private $rootView;
 
     private $version;
@@ -25,6 +27,8 @@ class Inertia extends Injectable
     private $shared = [];
 
     private $encryptHistory = false;
+
+    private $preserveBigIntegers = false;
 
     private $ssr;
 
@@ -130,6 +134,21 @@ class Inertia extends Injectable
     }
 
     /**
+     * Share a once prop. Returns the prop, so until(), key() and fresh() chain onto it.
+     *
+     * @param  string  $key
+     * @param  callable  $callback
+     * @return Prop
+     */
+    public function shareOnce($key, $callback)
+    {
+        $prop = self::once($callback);
+        $this->share($key, $prop);
+
+        return $prop;
+    }
+
+    /**
      * Read the request body, whether JSON, POST or PUT. $filters are Phalcon filter names applied to the value,
      * and with $notAllowEmpty an empty value returns $default. Without $name, returns all fields.
      *
@@ -201,6 +220,19 @@ class Inertia extends Injectable
     }
 
     /**
+     * Send integers beyond JavaScript's safe range as {"$bigint": "..."}, which the client turns into BigInt.
+     *
+     * @param  bool  $preserve
+     * @return $this
+     */
+    public function preserveBigIntegers($preserve = true)
+    {
+        $this->preserveBigIntegers = (bool) $preserve;
+
+        return $this;
+    }
+
+    /**
      * @return $this
      *
      * @throws Exception When there is no session service
@@ -208,6 +240,20 @@ class Inertia extends Injectable
     public function clearHistory()
     {
         $this->requireSession()->set(self::CLEAR_HISTORY, true);
+
+        return $this;
+    }
+
+    /**
+     * Keep the fragment of the visited URL on the page after the next redirect, even when it goes elsewhere.
+     *
+     * @return $this
+     *
+     * @throws Exception When there is no session service
+     */
+    public function preserveFragment()
+    {
+        $this->requireSession()->set(self::PRESERVE_FRAGMENT, true);
 
         return $this;
     }
@@ -335,7 +381,9 @@ class Inertia extends Injectable
             $headers,
             [
                 'encryptHistory' => $this->encryptHistory,
+                'preserveBigIntegers' => $this->preserveBigIntegers,
                 'clearHistory' => $session ? $session->get(self::CLEAR_HISTORY, false, true) : false,
+                'preserveFragment' => $session ? $session->get(self::PRESERVE_FRAGMENT, false, true) : false,
                 'sharedProps' => array_unique(array_map(function ($key) {
                     return current(explode('.', (string) $key));
                 }, array_keys($this->shared))),
