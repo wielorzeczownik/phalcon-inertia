@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0](https://github.com/wielorzeczownik/phalcon-inertia/compare/v0.2.0...v0.3.0) - 2026-10-24
+
+### Features
+
+- Render the root view through the view service (#14) ([f9a82b1](https://github.com/wielorzeczownik/phalcon-inertia/commit/f9a82b15767f61d9f6847e00a179f73b34526a8d))
+
+### Testing
+
+- Run the suite against react and svelte clients (#13) ([8888d05](https://github.com/wielorzeczownik/phalcon-inertia/commit/8888d05d3b37817ae075bd1d5324b0d36acd46b5))
+
+### Build System
+
+- Open major update prs for phalcon/phalcon (#12) ([5a13dab](https://github.com/wielorzeczownik/phalcon-inertia/commit/5a13dabc1c4de86b3767bd22aadd807c90cab2d5))
+
 ## [0.2.0](https://github.com/wielorzeczownik/phalcon-inertia/compare/v0.1.0...v0.2.0) - 2026-10-22
 
 ### Features
