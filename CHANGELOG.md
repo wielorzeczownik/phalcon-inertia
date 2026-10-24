@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0](https://github.com/wielorzeczownik/phalcon-inertia/compare/v1.0.0...v1.1.0) - 2026-10-24
+
+### Features
+
+- Add shareOnce, preserveFragment and preserveBigIntegers (#21) ([15a8179](https://github.com/wielorzeczownik/phalcon-inertia/commit/15a81792189f8ebac80cd63ee70e5ebbaffddb71))
+
 ## [1.0.0](https://github.com/wielorzeczownik/phalcon-inertia/compare/v0.3.0...v1.0.0) - 2026-10-24
 
 ### Breaking Changes
