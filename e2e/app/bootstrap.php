@@ -3,6 +3,8 @@
 use Phalcon\Di\FactoryDefault;
 use Phalcon\Mvc\Application;
 use Phalcon\Mvc\Router;
+use Phalcon\Mvc\View;
+use Phalcon\Mvc\View\Engine\Volt;
 use Phalcon\Session\Adapter\Files;
 use Phalcon\Session\Adapter\Stream;
 use Phalcon\Session\Manager;
@@ -26,6 +28,22 @@ $di->setShared('session', function () {
     $session->start();
 
     return $session;
+});
+
+$di->setShared('view', function () use ($di) {
+    $view = new View;
+    $view->setViewsDir(__DIR__.'/views/');
+    $view->registerEngines([
+        '.volt' => function ($view) use ($di) {
+            $volt = new Volt($view, $di);
+            // Phalcon 4 renamed compiledPath to path
+            $volt->setOptions([interface_exists('Phalcon\DiInterface') ? 'compiledPath' : 'path' => sys_get_temp_dir().'/']);
+
+            return $volt;
+        },
+    ]);
+
+    return $view;
 });
 
 $assetVersion = isset($_COOKIE['asset_version']) ? $_COOKIE['asset_version'] : '1';

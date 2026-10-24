@@ -29,7 +29,7 @@ class Inertia extends Injectable
     private $ssr;
 
     /**
-     * @param  string  $rootView  Path to the PHP template that renders the HTML shell
+     * @param  string  $rootView  Path to the PHP template that renders the HTML shell, or a view name for the view service
      * @param  string  $version  Asset version, a mismatch makes the client reload the page
      */
     public function __construct($rootView, $version = '')
@@ -478,6 +478,15 @@ class Inertia extends Injectable
 
     private function renderRootView($page, $head, $body)
     {
+        $file = stream_resolve_include_path($this->rootView);
+        if ($file === false || ! is_file($file)) {
+            if (! $this->getDI()->has('view')) {
+                throw new Exception('Root view "'.$this->rootView.'" is not a file, and there is no "view" service to render it as a view name.');
+            }
+
+            return $this->view->getPartial($this->rootView, compact('page', 'head', 'body'));
+        }
+
         ob_start();
         try {
             require $this->rootView;
