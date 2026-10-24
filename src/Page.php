@@ -141,15 +141,20 @@ class Page
         foreach ($props as $key => $prop) {
             $path = $prefix === '' ? (string) $key : $prefix.'.'.$key;
             if (! $this->isSelected($path, $prop, $parentResolved)) {
-                if (! $this->partial && $prop instanceof Prop && $prop->group() !== null && ! $this->wasLoaded($path, $prop)) {
-                    $this->meta['deferredProps'][$prop->group()][] = $path;
+                // An optional or deferred prop left out of the first visit still tells the client how to merge and keep it
+                if (! $this->partial && $prop instanceof Prop) {
+                    if ($prop->group() !== null && ! $this->wasLoaded($path, $prop)) {
+                        $this->meta['deferredProps'][$prop->group()][] = $path;
+                    }
+                    $this->collectMerge($path, $prop);
+                    $this->collectOnce($path, $prop);
                 }
 
                 continue;
             }
 
             if ($this->wasLoaded($path, $prop)) {
-                $this->meta['onceProps'][$prop->onceKey($path)] = ['prop' => $path, 'expiresAt' => $prop->expiresAt()];
+                $this->collectOnce($path, $prop);
 
                 continue;
             }
@@ -183,32 +188,41 @@ class Page
 
     private function collect($path, Prop $prop, $value)
     {
-        $isReset = in_array($path, $this->reset, true);
         if ($prop->scrollOptions() !== null) {
             $scroll = self::scroll($value, $prop->scrollOptions());
             $value = $scroll[0];
-            if (! $isReset) {
-                $this->meta[$this->scrollList][] = $path.'.'.$prop->scrollOptions()['wrapper'];
-            }
-            $this->meta['scrollProps'][$path] = $scroll[1] + ['reset' => $isReset];
+            $this->meta['scrollProps'][$path] = $scroll[1] + ['reset' => in_array($path, $this->reset, true)];
         }
 
-        if ($this->partial && ! $this->isRequested($path)) {
-            return $value;
+        $this->collectMerge($path, $prop);
+        $this->collectOnce($path, $prop);
+
+        return $value;
+    }
+
+    private function collectMerge($path, Prop $prop)
+    {
+        if (in_array($path, $this->reset, true) || ($this->partial && ! $this->isRequested($path))) {
+            return;
         }
 
-        if ($prop->mergeMode() !== null && ! $isReset) {
+        if ($prop->scrollOptions() !== null) {
+            $this->meta[$this->scrollList][] = $path.'.'.$prop->scrollOptions()['wrapper'];
+        }
+
+        if ($prop->mergeMode() !== null) {
             $this->meta[self::$mergeLists[$prop->mergeMode()]][] = $path;
             foreach ($prop->matchFields() as $field) {
                 $this->meta['matchPropsOn'][] = $path.'.'.$field;
             }
         }
+    }
 
-        if ($prop->isOnce()) {
+    private function collectOnce($path, Prop $prop)
+    {
+        if ($prop->isOnce() && ! ($this->partial && ! $this->isRequested($path))) {
             $this->meta['onceProps'][$prop->onceKey($path)] = ['prop' => $path, 'expiresAt' => $prop->expiresAt()];
         }
-
-        return $value;
     }
 
     private function isSelected($path, $prop, $parentResolved)
@@ -378,8 +392,22 @@ class Page
 
     private static function scroll($value, array $options)
     {
+        $custom = $options['metadata'];
+        if (! is_array($custom) && is_callable($custom)) {
+            $custom = call_user_func($custom, $value);
+        }
+
+        if ($custom instanceof ProvidesScrollMetadata) {
+            $custom = [
+                'pageName' => $custom->getPageName(),
+                'previousPage' => $custom->getPreviousPage(),
+                'nextPage' => $custom->getNextPage(),
+                'currentPage' => $custom->getCurrentPage(),
+            ];
+        }
+
         $page = self::paginator($value);
-        if ($page === null && $options['metadata'] === null) {
+        if ($page === null && $custom === null) {
             throw new Exception('Inertia::scroll() needs a Phalcon paginator page or the scroll metadata.');
         }
 
@@ -394,7 +422,7 @@ class Page
             $metadata['currentPage'] = $current;
         }
 
-        return [$value, array_merge($metadata, (array) $options['metadata'])];
+        return [$value, array_merge($metadata, (array) $custom)];
     }
 
     private static function paginator($page)

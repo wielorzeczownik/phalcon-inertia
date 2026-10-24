@@ -263,7 +263,7 @@ return $this->inertia->render('Dashboard', [
 | `Inertia::once($callback)`          | yes, unless the client has it | when requested                       |
 | `Inertia::scroll($page)`            | yes                           | when requested, merged by the client |
 
-`append()`, `prepend()`, `deep()` and `matchOn($field)` chain onto `Inertia::defer()` as well. Every factory also exists on `PhalconInertia\Prop`, except `once()`, which there is written as `Prop::value($value)->once()`.
+`append()`, `prepend()`, `deep()` and `matchOn($field)` chain onto `Inertia::defer()` as well, and `defer($group)` chains onto `Inertia::scroll()` and `Inertia::merge()`. Every factory also exists on `PhalconInertia\Prop`, except `once()`, which there is written as `Prop::value($value)->once()`.
 
 #### Nested props
 
@@ -347,7 +347,9 @@ return $this->inertia->render('Posts/Index', [
 </InfiniteScroll>
 ```
 
-For data that doesn't come from a Phalcon paginator, pass the wrapper key and the metadata yourself, e.g. `Inertia::scroll(['items' => $items], 'items', ['currentPage' => 2, 'previousPage' => 1, 'nextPage' => 3])`. Whether new items are appended or prepended follows the `X-Inertia-Infinite-Scroll-Merge-Intent` header from the client.
+For data that doesn't come from a Phalcon paginator, pass the wrapper key and the metadata yourself, e.g. `Inertia::scroll(['items' => $items], 'items', ['currentPage' => 2, 'previousPage' => 1, 'nextPage' => 3])`. The metadata can also be a `PhalconInertia\ProvidesScrollMetadata` object, or a callable that gets the value and returns the array or the object.
+
+`Inertia::scroll($page)->defer()` loads the first page right after the page renders instead of with it, like `Inertia::defer()`. It takes the group as its argument. Whether new items are appended or prepended follows the `X-Inertia-Infinite-Scroll-Merge-Intent` header from the client.
 
 ### Validation
 
