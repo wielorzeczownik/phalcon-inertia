@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0](https://github.com/wielorzeczownik/phalcon-inertia/compare/v1.2.0...v1.3.0) - 2026-10-24
+
+### Features
+
+- Allow deferring scroll props (#24) ([1653db7](https://github.com/wielorzeczownik/phalcon-inertia/commit/1653db78d424149fa040440053586cd6ec0cea8a))
+
 ## [1.2.0](https://github.com/wielorzeczownik/phalcon-inertia/compare/v1.1.0...v1.2.0) - 2026-10-24
 
 ### Features
