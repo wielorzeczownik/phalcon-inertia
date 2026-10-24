@@ -4,6 +4,8 @@ namespace PhalconInertia;
 
 class Page
 {
+    const MAX_SAFE_INTEGER = 9007199254740991;
+
     private static $mergeLists = [
         Prop::APPEND => 'mergeProps',
         Prop::PREPEND => 'prependProps',
@@ -43,6 +45,11 @@ class Page
         $builder = new self($partial, $headers, $options);
         $resolved = $builder->props(self::unpack($props), '', false);
         $meta = $builder->meta;
+        $flash = isset($options['flash']) ? $options['flash'] : [];
+        if (! empty($options['preserveBigIntegers'])) {
+            $resolved = self::bigIntegers($resolved);
+            $flash = self::bigIntegers($flash);
+        }
 
         $page = [
             'component' => $component,
@@ -57,6 +64,10 @@ class Page
 
         if (! empty($options['clearHistory'])) {
             $page['clearHistory'] = true;
+        }
+
+        if (! empty($options['preserveFragment'])) {
+            $page['preserveFragment'] = true;
         }
 
         foreach (['mergeProps', 'prependProps', 'deepMergeProps', 'matchPropsOn', 'deferredProps', 'rescuedProps'] as $list) {
@@ -77,8 +88,12 @@ class Page
             $page['sharedProps'] = array_values($options['sharedProps']);
         }
 
-        if (! empty($options['flash'])) {
-            $page['flash'] = (object) $options['flash'];
+        if (! empty($flash)) {
+            $page['flash'] = (object) $flash;
+        }
+
+        if (! empty($options['preserveBigIntegers'])) {
+            $page['preserveBigIntegers'] = true;
         }
 
         return $page;
@@ -258,6 +273,59 @@ class Page
         }
 
         return $props;
+    }
+
+    /**
+     * Wrap integers beyond JavaScript's safe range. Objects with their own JSON form (DateTime and other
+     * internal classes) are left alone, and $seen holds the ancestors so a cycle is left to json_encode.
+     */
+    private static function bigIntegers($value, array $seen = [])
+    {
+        if (is_int($value)) {
+            return $value > self::MAX_SAFE_INTEGER || $value < -self::MAX_SAFE_INTEGER ? ['$bigint' => (string) $value] : $value;
+        }
+
+        if (is_array($value)) {
+            foreach ($value as $key => $item) {
+                $value[$key] = self::bigIntegers($item, $seen);
+            }
+
+            return $value;
+        }
+
+        if (! is_object($value) || isset($seen[spl_object_hash($value)])) {
+            return $value;
+        }
+
+        $seen[spl_object_hash($value)] = true;
+        if ($value instanceof \BackedEnum) {
+            return self::bigIntegers($value->value, $seen);
+        }
+
+        if ($value instanceof \UnitEnum) {
+            return $value;
+        }
+
+        if ($value instanceof \JsonSerializable) {
+            return self::bigIntegers($value->jsonSerialize(), $seen);
+        }
+
+        if ($value instanceof \stdClass || ! self::isInternal($value)) {
+            return (object) self::bigIntegers(get_object_vars($value), $seen);
+        }
+
+        return $value;
+    }
+
+    private static function isInternal($object)
+    {
+        for ($class = new \ReflectionClass($object); $class; $class = $class->getParentClass()) {
+            if ($class->isInternal()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static function unwrap($value)

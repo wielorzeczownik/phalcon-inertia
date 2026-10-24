@@ -196,6 +196,8 @@ class UsersController extends \Phalcon\Mvc\Controller
 
 Closures run only when their prop is actually sent. A partial reload that skips a prop skips its query too.
 
+Integers beyond JavaScript's safe range, like `BIGINT` ids, lose precision in `JSON.parse`. `$this->inertia->preserveBigIntegers()` sends them as `{"$bigint": "..."}` in props and flash data, and the client turns them into `BigInt`.
+
 There is also a global `inertia()` helper. `inertia('Users/Index', $props)` renders a page, and `inertia()` with no arguments returns the service.
 
 `$this->inertia` is resolved by the DI container, so IDEs don't know its type. Declare it on a base controller to get completion:
@@ -282,7 +284,7 @@ Pass `true` as the third argument of `defer()` to rescue a prop whose callback t
 
 #### Once props
 
-A once prop is resolved on the first visit and then kept by the client. On later visits the client lists the props it already has in `X-Inertia-Except-Once-Props`, and their callbacks don't run. The client only keeps props of the current page. To keep one across pages, share it: `share('plans', Inertia::once(...))`.
+A once prop is resolved on the first visit and then kept by the client. On later visits the client lists the props it already has in `X-Inertia-Except-Once-Props`, and their callbacks don't run. The client only keeps props of the current page. To keep one across pages, share it: `shareOnce('plans', $callback)`, which returns the prop so `until()`, `key()` and `fresh()` chain onto it.
 
 ```php
 Inertia::once($callback)->until(3600); // seconds, a DateTimeInterface or a DateInterval
@@ -373,6 +375,7 @@ return $this->inertia->location('https://payments.example.com/checkout');
 - Flash data shows up on the next page as `usePage().flash`.
 - After `PUT`, `PATCH` or `DELETE`, a redirect becomes `303 See Other`.
 - A redirect to a URL with a fragment, like `redirect('posts#comments')`, becomes `409` with `X-Inertia-Redirect`. The client follows it and keeps the fragment.
+- `preserveFragment()` keeps the fragment of the visited URL on the page after the next redirect, even when the redirect goes to another URL.
 - An action that returns nothing to an Inertia request redirects back.
 - `location()` leaves the app with a full page load.
 - `encryptHistory()` on the service turns on history encryption for every page.
@@ -1003,22 +1006,23 @@ $page->has('users', 3, function ($user) {
 
 Class settings, for setups without the provider:
 
-| Setting                     | Required | Default                  | Meaning                                                               |
-| --------------------------- | -------- | ------------------------ | --------------------------------------------------------------------- |
-| `Inertia` `$rootView`       | yes      |                          | Path to the root view PHP file, or a view name                        |
-| `Inertia` `$version`        | no       | `''`                     | Asset version, compared with `X-Inertia-Version`                      |
-| `Inertia::setRootView()`    | no       | the constructor value    | Root view for the current request                                     |
-| `Inertia::encryptHistory()` | no       | off                      | Sets `encryptHistory` on every page                                   |
-| `Inertia::setSsr()`         | no       | off                      | `SsrGateway` used for the first visit                                 |
-| `SsrGateway` `$url`         | no       | `http://127.0.0.1:13714` | Base URL of the SSR server, `/render` is appended                     |
-| `SsrGateway` `$timeout`     | no       | `2`                      | Seconds to wait before falling back to client rendering               |
-| `Vite` `$publicPath`        | yes      |                          | Public directory holding `hot` and the build directory                |
-| `Vite` `$buildDirectory`    | no       | `build`                  | Build directory inside the public directory                           |
-| `Vite` `$assetUrl`          | no       | `/`                      | Base URL for built files, for example a CDN                           |
-| `Routes` `$options`         | no       | `[]`                     | [Route options](#route-options), as an array or a `Phalcon\Config`    |
-| `session` service           | no       |                          | Needed by `withErrors()`, `flash()`, `clearHistory()` and `Csrf`      |
-| `logger` service            | no       |                          | Receives rescued deferred props through `error()`, else `error_log()` |
-| `allow_url_fopen`           | no       | PHP default              | Needed by `SsrGateway`                                                |
+| Setting                          | Required | Default                  | Meaning                                                                                |
+| -------------------------------- | -------- | ------------------------ | -------------------------------------------------------------------------------------- |
+| `Inertia` `$rootView`            | yes      |                          | Path to the root view PHP file, or a view name                                         |
+| `Inertia` `$version`             | no       | `''`                     | Asset version, compared with `X-Inertia-Version`                                       |
+| `Inertia::setRootView()`         | no       | the constructor value    | Root view for the current request                                                      |
+| `Inertia::encryptHistory()`      | no       | off                      | Sets `encryptHistory` on every page                                                    |
+| `Inertia::preserveBigIntegers()` | no       | off                      | Sends integers beyond JavaScript's safe range as `BigInt`                              |
+| `Inertia::setSsr()`              | no       | off                      | `SsrGateway` used for the first visit                                                  |
+| `SsrGateway` `$url`              | no       | `http://127.0.0.1:13714` | Base URL of the SSR server, `/render` is appended                                      |
+| `SsrGateway` `$timeout`          | no       | `2`                      | Seconds to wait before falling back to client rendering                                |
+| `Vite` `$publicPath`             | yes      |                          | Public directory holding `hot` and the build directory                                 |
+| `Vite` `$buildDirectory`         | no       | `build`                  | Build directory inside the public directory                                            |
+| `Vite` `$assetUrl`               | no       | `/`                      | Base URL for built files, for example a CDN                                            |
+| `Routes` `$options`              | no       | `[]`                     | [Route options](#route-options), as an array or a `Phalcon\Config`                     |
+| `session` service                | no       |                          | Needed by `withErrors()`, `flash()`, `clearHistory()`, `preserveFragment()` and `Csrf` |
+| `logger` service                 | no       |                          | Receives rescued deferred props through `error()`, else `error_log()`                  |
+| `allow_url_fopen`                | no       | PHP default              | Needed by `SsrGateway`                                                                 |
 
 ### Route options
 
