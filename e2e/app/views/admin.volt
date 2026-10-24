@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <?= $this->vite->tags('resources/js/app.js') ?>
-    <?= $head ?>
+    {{ vite.tags('resources/js/app.js') }}
+    {{ head }}
 </head>
 <body>
     <div id="admin-layout">
-        <?= $body ?>
+        {{ body }}
     </div>
 </body>
 </html>

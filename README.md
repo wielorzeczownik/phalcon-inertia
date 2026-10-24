@@ -158,6 +158,27 @@ The root view is a plain PHP file. It runs inside the `Inertia` service, with `$
 </html>
 ```
 
+To write the root view in Volt (or any engine registered on your `view` service), pass a view name instead of a file path. It's rendered with `$this->view->getPartial()`, so view variables, partials and your own Volt functions all work, and `page`, `head` and `body` are added to the view variables:
+
+```php
+'rootView' => 'app', // views/app.volt
+```
+
+```twig
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    {{ routes.script() }}
+    {{ vite.tags('resources/js/app.js') }}
+    {{ head }}
+</head>
+<body>
+    {{ body }}
+</body>
+</html>
+```
+
 ## Inertia
 
 ### Rendering pages
@@ -402,17 +423,17 @@ With the provider, the `ssr` option does the same. Build with `vite build && vit
 
 If you know Ziggy, this is how the names map:
 
-| Ziggy                                | phalcon-inertia                          |
-| ------------------------------------ | ---------------------------------------- |
-| `@routes`                            | `<?= $this->routes->script() ?>`         |
-| `(new Ziggy)->toArray()`             | `$this->routes->toArray()`               |
-| `php artisan ziggy:generate --types` | `$this->routes->types()`                 |
-| `ziggy-js`                           | `phalcon-routes`                         |
-| `ZiggyVue`                           | `RouteVue`                               |
-| `useRoute()`                         | `useRoute()`                             |
-| `config/ziggy.php`                   | `routes` option, or a `Phalcon\Config`   |
-| `@routes('author')`                  | `<?= $this->routes->script('author') ?>` |
-| `URL::defaults()`                    | `defaults` in the `routes` option        |
+| Ziggy                                | phalcon-inertia                                                                   |
+| ------------------------------------ | --------------------------------------------------------------------------------- |
+| `@routes`                            | `<?= $this->routes->script() ?>`, in Volt `{{ routes.script() }}`                 |
+| `(new Ziggy)->toArray()`             | `$this->routes->toArray()`                                                        |
+| `php artisan ziggy:generate --types` | `$this->routes->types()`                                                          |
+| `ziggy-js`                           | `phalcon-routes`                                                                  |
+| `ZiggyVue`                           | `RouteVue`                                                                        |
+| `useRoute()`                         | `useRoute()`                                                                      |
+| `config/ziggy.php`                   | `routes` option, or a `Phalcon\Config`                                            |
+| `@routes('author')`                  | `<?= $this->routes->script('author') ?>`, in Volt `{{ routes.script('author') }}` |
+| `URL::defaults()`                    | `defaults` in the `routes` option                                                 |
 
 ### `route()` function
 
@@ -958,7 +979,7 @@ $page->has('users', 3, function ($user) {
 
 | Option           | Required | Default                   | Meaning                                                     |
 | ---------------- | -------- | ------------------------- | ----------------------------------------------------------- |
-| `rootView`       | yes      |                           | Path to the root view PHP file                              |
+| `rootView`       | yes      |                           | Path to the root view PHP file, or a view name              |
 | `publicPath`     | yes      |                           | Public directory holding `hot` and the build directory      |
 | `version`        | no       | hash of the Vite manifest | Asset version, compared with `X-Inertia-Version`            |
 | `buildDirectory` | no       | `build`                   | Build directory inside the public directory                 |
@@ -972,7 +993,7 @@ Class settings, for setups without the provider:
 
 | Setting                     | Required | Default                  | Meaning                                                               |
 | --------------------------- | -------- | ------------------------ | --------------------------------------------------------------------- |
-| `Inertia` `$rootView`       | yes      |                          | Path to the root view PHP file                                        |
+| `Inertia` `$rootView`       | yes      |                          | Path to the root view PHP file, or a view name                        |
 | `Inertia` `$version`        | no       | `''`                     | Asset version, compared with `X-Inertia-Version`                      |
 | `Inertia::setRootView()`    | no       | the constructor value    | Root view for the current request                                     |
 | `Inertia::encryptHistory()` | no       | off                      | Sets `encryptHistory` on every page                                   |

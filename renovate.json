@@ -23,6 +23,13 @@
       "matchStrings": [
         "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n[^\\n]*?(?:_VERSION=|[a-z][a-z_-]*: )(?<currentValue>[^\\s\"]+)"
       ]
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^docker/Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>git-refs) depName=(?<depName>\\S+) branch=(?<currentValue>\\S+)\\n[^\\n]*?_COMMIT=(?<currentDigest>[a-f0-9]{40})"
+      ]
     }
   ],
   "packageRules": [

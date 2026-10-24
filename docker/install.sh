@@ -5,6 +5,7 @@ set -euo pipefail
 : "${PSR_VERSION:?set PSR_VERSION}"
 : "${PHPUNIT_VERSION:?set PHPUNIT_VERSION}"
 : "${COMPOSER_VERSION:?set COMPOSER_VERSION}"
+: "${VOLT_COMMIT:?set VOLT_COMMIT}"
 
 cd /tmp
 
@@ -21,7 +22,7 @@ case "$PHALCON_VERSION" in
   apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
   curl -fsSL -o composer.phar "https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar"
   mkdir -p /opt/phalcon
-  php composer.phar require --working-dir=/opt/phalcon --no-interaction --no-progress "phalcon/phalcon:${PHALCON_VERSION}"
+  php composer.phar require --working-dir=/opt/phalcon --no-interaction --no-progress "phalcon/phalcon:${PHALCON_VERSION}" "phalcon/volt:1.0.x-dev#${VOLT_COMMIT}"
   echo 'auto_prepend_file=/opt/phalcon/vendor/autoload.php' >"$PHP_INI_DIR/conf.d/phalcon.ini"
   ;;
 5.*)

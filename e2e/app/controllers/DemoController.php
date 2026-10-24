@@ -61,7 +61,7 @@ class DemoController extends Controller
 
     public function adminAction()
     {
-        return $this->inertia->setRootView(__DIR__.'/../views/admin.php')->render('Admin');
+        return $this->inertia->setRootView('admin')->render('Admin');
     }
 
     public function awayAction()

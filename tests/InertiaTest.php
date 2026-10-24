@@ -3,6 +3,7 @@
 namespace PhalconInertia\Tests;
 
 use Phalcon\Http\Response;
+use Phalcon\Mvc\View;
 use PhalconInertia\Inertia;
 use PhalconInertia\Tests\Fixtures\Message;
 use PhalconInertia\Tests\Fixtures\RecordingLogger;
@@ -391,6 +392,36 @@ class InertiaTest extends TestCase
 
         $this->assertHasText('<main data-layout="admin">', $html);
         $this->assertSame('Admin/Index', self::pageFromHtml($html)['component']);
+    }
+
+    public function test_root_view_name_renders_through_the_view_service()
+    {
+        $dir = sys_get_temp_dir().'/views-'.uniqid('', true).'/';
+        mkdir($dir);
+        file_put_contents($dir.'app.volt', '<title>{{ title }}</title>{{ partial(\'nav\') }}<main data-component="{{ page[\'component\'] }}">{{ head }}{{ body }}</main>');
+        file_put_contents($dir.'nav.volt', '<nav>{{ request.getMethod() }}</nav>');
+
+        $inertia = $this->inertia();
+        $view = new View;
+        $view->setViewsDir($dir);
+        $view->registerEngines(['.volt' => 'Phalcon\Mvc\View\Engine\Volt']);
+        $view->setDI($inertia->getDI());
+        $view->setVar('title', 'Users');
+        $inertia->getDI()->setShared('view', $view);
+
+        $html = $inertia->setRootView('app')->render('Users/Index')->getContent();
+        array_map('unlink', glob($dir.'*'));
+        rmdir($dir);
+
+        $this->assertHasText('<title>Users</title><nav>GET</nav><main data-component="Users/Index">', $html);
+        $this->assertSame('Users/Index', self::pageFromHtml($html)['component']);
+    }
+
+    public function test_root_view_name_needs_a_view_service()
+    {
+        $this->expectException('PhalconInertia\Exception');
+
+        $this->inertia()->setRootView('app')->render('Users/Index');
     }
 
     public function test_error_pages_render_as_inertia_pages_with_their_status()
