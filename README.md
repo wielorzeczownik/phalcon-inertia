@@ -278,6 +278,38 @@ return $this->inertia->render('Users/Show', [
 
 The first visit sends `user.name` and lists `user.permissions` under `deferredProps`. `<Deferred data="user.permissions">` then loads it, and `router.reload({ only: ['user.permissions'] })` reloads only that. Children of a closure or a prop type are sent whole once their parent is selected, so `only: ['team.name']` on a `'team' => function () {...}` prop returns all of `team`.
 
+#### Props from objects
+
+An object can shape its own prop. `ProvidesInertiaProperty` turns an object used as a prop value into that value, and `ProvidesInertiaProperties` lets an object passed without a key to `render()` or `share()` provide several props at once:
+
+```php
+use PhalconInertia\PropertyContext;
+use PhalconInertia\ProvidesInertiaProperties;
+use PhalconInertia\ProvidesInertiaProperty;
+use PhalconInertia\RenderContext;
+
+class UserResource implements ProvidesInertiaProperty
+{
+    public function toInertiaProperty(PropertyContext $prop)
+    {
+        return ['id' => $this->user->id, 'name' => $this->user->name];
+    }
+}
+
+class CurrentUserProps implements ProvidesInertiaProperties
+{
+    public function toInertiaProperties(RenderContext $context)
+    {
+        return ['user' => ..., 'permissions' => ...];
+    }
+}
+
+$this->inertia->share([new CurrentUserProps($auth)]);
+return $this->inertia->render('Users/Show', ['user' => new UserResource($user)]);
+```
+
+`PropertyContext` has the prop's dot path (`$prop->key`), the props on the same level (`$prop->props`) and the request (`$prop->request`). `RenderContext` has the component name (`$context->component`) and the request. Page props still win over shared ones with the same name.
+
 #### Rescued deferred props
 
 Pass `true` as the third argument of `defer()` to rescue a prop whose callback throws. The exception goes to the `logger` service, or to `error_log()` if there isn't one. The prop is dropped and listed in `rescuedProps`, and the rest of the page loads normally. `<Deferred>` then renders its `rescue` slot, and `router.reload({ only: ['permissions'] })` retries. Without the flag, the exception fails the whole request.
