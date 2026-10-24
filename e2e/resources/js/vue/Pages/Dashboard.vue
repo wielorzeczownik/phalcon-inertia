@@ -17,7 +17,8 @@ defineProps({
     <button type="button" @click="router.reload({ only: ['counter'] })">
       Refresh counter
     </button>
-    <Deferred data="stats">
+    <p data-testid="stats-title">{{ stats.title }}</p>
+    <Deferred data="stats.visits">
       <template #fallback>
         <p>Loading stats</p>
       </template>

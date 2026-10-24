@@ -19,9 +19,12 @@ class DemoController extends Controller
 
                 return $count;
             },
-            'stats' => Inertia::defer(function () {
-                return ['visits' => 42];
-            }),
+            'stats' => [
+                'title' => 'Stats',
+                'visits' => Inertia::defer(function () {
+                    return 42;
+                }),
+            ],
             'audit' => Inertia::optional(function () {
                 return 'audit log loaded';
             }),

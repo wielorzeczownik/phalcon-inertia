@@ -20,9 +20,10 @@ export default function Dashboard({
       >
         Refresh counter
       </button>
-      <Deferred data="stats" fallback={<p>Loading stats</p>}>
+      <p data-testid="stats-title">{stats.title}</p>
+      <Deferred data="stats.visits" fallback={<p>Loading stats</p>}>
         <p id="stats" data-testid="stats">
-          Visits: {stats?.visits}
+          Visits: {stats.visits}
         </p>
       </Deferred>
       <Deferred

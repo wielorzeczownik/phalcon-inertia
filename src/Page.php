@@ -10,72 +10,39 @@ class Page
         Prop::DEEP => 'deepMergeProps',
     ];
 
+    private $partial;
+
+    private $only;
+
+    private $except;
+
+    private $reset;
+
+    private $loaded;
+
+    private $scrollList;
+
+    private $options;
+
+    private $meta = [];
+
+    private function __construct($partial, array $headers, array $options)
+    {
+        $this->partial = $partial;
+        $this->only = self::csv(self::header($headers, 'X-Inertia-Partial-Data'));
+        $this->except = self::csv(self::header($headers, 'X-Inertia-Partial-Except'));
+        $this->reset = self::csv(self::header($headers, 'X-Inertia-Reset'));
+        $this->loaded = $partial ? [] : self::csv(self::header($headers, 'X-Inertia-Except-Once-Props'));
+        $this->scrollList = self::header($headers, 'X-Inertia-Infinite-Scroll-Merge-Intent') === 'prepend' ? 'prependProps' : 'mergeProps';
+        $this->options = $options;
+    }
+
     public static function build($component, array $props, $url, $version, array $headers = [], array $options = [])
     {
         $partial = $component !== '' && self::header($headers, 'X-Inertia-Partial-Component') === $component;
-        $only = self::csv(self::header($headers, 'X-Inertia-Partial-Data'));
-        $except = self::csv(self::header($headers, 'X-Inertia-Partial-Except'));
-        $reset = self::csv(self::header($headers, 'X-Inertia-Reset'));
-        $loaded = $partial ? [] : self::csv(self::header($headers, 'X-Inertia-Except-Once-Props'));
-        $scrollList = self::header($headers, 'X-Inertia-Infinite-Scroll-Merge-Intent') === 'prepend' ? 'prependProps' : 'mergeProps';
-
-        $resolved = [];
-        $meta = [];
-        foreach ($props as $key => $prop) {
-            $key = (string) $key;
-            if (! self::isSelected($key, $prop, $partial, $only, $except)) {
-                continue;
-            }
-
-            if (self::wasLoaded($key, $prop, $loaded)) {
-                $meta['onceProps'][$prop->onceKey($key)] = ['prop' => $key, 'expiresAt' => $prop->expiresAt()];
-
-                continue;
-            }
-
-            try {
-                $value = self::resolve($prop);
-            } catch (\Exception $e) {
-                self::rescue($prop, $e, $options);
-                $meta['rescuedProps'][] = $key;
-
-                continue;
-            } catch (\Throwable $e) {
-                self::rescue($prop, $e, $options);
-                $meta['rescuedProps'][] = $key;
-
-                continue;
-            }
-
-            if (! $prop instanceof Prop) {
-                $resolved[$key] = $value;
-
-                continue;
-            }
-
-            if ($prop->scrollOptions() !== null) {
-                $scroll = self::scroll($value, $prop->scrollOptions());
-                $value = $scroll[0];
-                $isReset = in_array($key, $reset, true);
-                if (! $isReset) {
-                    $meta[$scrollList][] = $key.'.'.$prop->scrollOptions()['wrapper'];
-                }
-                $meta['scrollProps'][$key] = $scroll[1] + ['reset' => $isReset];
-            }
-
-            if ($prop->mergeMode() !== null && ! in_array($key, $reset, true)) {
-                $meta[self::$mergeLists[$prop->mergeMode()]][] = $key;
-                foreach ($prop->matchFields() as $field) {
-                    $meta['matchPropsOn'][] = $key.'.'.$field;
-                }
-            }
-
-            if ($prop->isOnce()) {
-                $meta['onceProps'][$prop->onceKey($key)] = ['prop' => $key, 'expiresAt' => $prop->expiresAt()];
-            }
-
-            $resolved[$key] = $value;
-        }
+        $builder = new self($partial, $headers, $options);
+        $resolved = $builder->props(self::unpack($props), '', false);
+        $meta = $builder->meta;
 
         $page = [
             'component' => $component,
@@ -92,22 +59,10 @@ class Page
             $page['clearHistory'] = true;
         }
 
-        foreach (['mergeProps', 'prependProps', 'deepMergeProps', 'matchPropsOn'] as $list) {
+        foreach (['mergeProps', 'prependProps', 'deepMergeProps', 'matchPropsOn', 'deferredProps', 'rescuedProps'] as $list) {
             if (isset($meta[$list])) {
                 $page[$list] = $meta[$list];
             }
-        }
-
-        if (! $partial) {
-            foreach ($props as $key => $prop) {
-                if ($prop instanceof Prop && $prop->group() !== null && ! self::wasLoaded((string) $key, $prop, $loaded)) {
-                    $page['deferredProps'][$prop->group()][] = (string) $key;
-                }
-            }
-        }
-
-        if (isset($meta['rescuedProps'])) {
-            $page['rescuedProps'] = $meta['rescuedProps'];
         }
 
         if (isset($meta['scrollProps'])) {
@@ -131,41 +86,187 @@ class Page
 
     public static function resolve($value)
     {
-        if ($value instanceof Prop) {
-            return self::resolve($value->get());
+        $value = self::unwrap($value);
+
+        return is_array($value) ? array_map([__CLASS__, 'resolve'], $value) : $value;
+    }
+
+    /**
+     * Resolve a level of the props tree. Children of a prop that wasn't a plain array (a closure or a Prop)
+     * skip partial filtering, like the parent they came from.
+     */
+    private function props(array $props, $prefix, $parentResolved)
+    {
+        $resolved = [];
+        foreach ($props as $key => $prop) {
+            $path = $prefix === '' ? (string) $key : $prefix.'.'.$key;
+            if (! $this->isSelected($path, $prop, $parentResolved)) {
+                if (! $this->partial && $prop instanceof Prop && $prop->group() !== null && ! $this->wasLoaded($path, $prop)) {
+                    $this->meta['deferredProps'][$prop->group()][] = $path;
+                }
+
+                continue;
+            }
+
+            if ($this->wasLoaded($path, $prop)) {
+                $this->meta['onceProps'][$prop->onceKey($path)] = ['prop' => $path, 'expiresAt' => $prop->expiresAt()];
+
+                continue;
+            }
+
+            try {
+                $value = self::unwrap($prop);
+            } catch (\Exception $e) {
+                self::rescue($prop, $e, $this->options);
+                $this->meta['rescuedProps'][] = $path;
+
+                continue;
+            } catch (\Throwable $e) {
+                self::rescue($prop, $e, $this->options);
+                $this->meta['rescuedProps'][] = $path;
+
+                continue;
+            }
+
+            if ($prop instanceof Prop) {
+                $value = $this->collect($path, $prop, $value);
+            }
+
+            $resolved[$key] = is_array($value) ? $this->props($value, $path, $parentResolved || ! is_array($prop)) : $value;
         }
 
-        if ($value instanceof \Closure) {
-            return self::resolve(call_user_func($value));
+        return $resolved;
+    }
+
+    private function collect($path, Prop $prop, $value)
+    {
+        $isReset = in_array($path, $this->reset, true);
+        if ($prop->scrollOptions() !== null) {
+            $scroll = self::scroll($value, $prop->scrollOptions());
+            $value = $scroll[0];
+            if (! $isReset) {
+                $this->meta[$this->scrollList][] = $path.'.'.$prop->scrollOptions()['wrapper'];
+            }
+            $this->meta['scrollProps'][$path] = $scroll[1] + ['reset' => $isReset];
         }
 
-        if (is_array($value)) {
-            return array_map([__CLASS__, 'resolve'], $value);
+        if ($this->partial && ! $this->isRequested($path)) {
+            return $value;
+        }
+
+        if ($prop->mergeMode() !== null && ! $isReset) {
+            $this->meta[self::$mergeLists[$prop->mergeMode()]][] = $path;
+            foreach ($prop->matchFields() as $field) {
+                $this->meta['matchPropsOn'][] = $path.'.'.$field;
+            }
+        }
+
+        if ($prop->isOnce()) {
+            $this->meta['onceProps'][$prop->onceKey($path)] = ['prop' => $path, 'expiresAt' => $prop->expiresAt()];
         }
 
         return $value;
     }
 
-    private static function isSelected($key, $prop, $partial, array $only, array $except)
+    private function isSelected($path, $prop, $parentResolved)
     {
         if ($prop instanceof Prop && $prop->isAlways()) {
             return true;
         }
 
-        if (! $partial) {
+        if (! $this->partial) {
             return ! ($prop instanceof Prop && ($prop->isOptional() || $prop->group() !== null));
         }
 
-        if ($only && ! in_array($key, $only, true)) {
+        if ($parentResolved) {
+            return true;
+        }
+
+        if ($this->only && ! self::matches($path, $this->only) && ! self::leadsTo($path, $this->only)) {
             return false;
         }
 
-        return ! in_array($key, $except, true);
+        return ! self::matches($path, $this->except);
     }
 
-    private static function wasLoaded($key, $prop, array $loaded)
+    /**
+     * Whether a partial reload asked for this path itself, not only for something inside it.
+     */
+    private function isRequested($path)
     {
-        return $prop instanceof Prop && $prop->isOnce() && ! $prop->isFresh() && in_array($prop->onceKey($key), $loaded, true);
+        return (! $this->only || self::matches($path, $this->only)) && ! self::matches($path, $this->except);
+    }
+
+    private function wasLoaded($path, $prop)
+    {
+        return $prop instanceof Prop && $prop->isOnce() && ! $prop->isFresh() && in_array($prop->onceKey($path), $this->loaded, true);
+    }
+
+    /**
+     * Whether the path is one of the given paths or inside one.
+     */
+    private static function matches($path, array $paths)
+    {
+        foreach ($paths as $candidate) {
+            if ($path === $candidate || strpos($path, $candidate.'.') === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Whether one of the given paths is inside the path.
+     */
+    private static function leadsTo($path, array $paths)
+    {
+        foreach ($paths as $candidate) {
+            if (strpos($candidate, $path.'.') === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Move top-level keys like "user.permissions" into the nested array they point into.
+     */
+    private static function unpack(array $props)
+    {
+        foreach ($props as $key => $value) {
+            if (strpos((string) $key, '.') === false) {
+                continue;
+            }
+
+            unset($props[$key]);
+            $segments = explode('.', (string) $key);
+            $last = array_pop($segments);
+            $node = &$props;
+            foreach ($segments as $segment) {
+                if (isset($node[$segment]) && $node[$segment] instanceof \Closure) {
+                    $node[$segment] = call_user_func($node[$segment]);
+                }
+                if (! isset($node[$segment]) || ! is_array($node[$segment])) {
+                    $node[$segment] = [];
+                }
+                $node = &$node[$segment];
+            }
+            $node[$last] = $value;
+            unset($node);
+        }
+
+        return $props;
+    }
+
+    private static function unwrap($value)
+    {
+        while ($value instanceof Prop || $value instanceof \Closure) {
+            $value = $value instanceof Prop ? $value->get() : call_user_func($value);
+        }
+
+        return $value;
     }
 
     private static function rescue($prop, $exception, array $options)

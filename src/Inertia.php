@@ -336,7 +336,9 @@ class Inertia extends Injectable
             [
                 'encryptHistory' => $this->encryptHistory,
                 'clearHistory' => $session ? $session->get(self::CLEAR_HISTORY, false, true) : false,
-                'sharedProps' => array_map('strval', array_keys($this->shared)),
+                'sharedProps' => array_unique(array_map(function ($key) {
+                    return current(explode('.', (string) $key));
+                }, array_keys($this->shared))),
                 'flash' => $session ? $session->get(self::FLASH, [], true) : [],
                 'report' => function ($exception) {
                     $this->report($exception);

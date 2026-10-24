@@ -123,6 +123,7 @@ test('deferred, partial and optional props load on demand', async ({
   await page.goto('/dashboard');
 
   await expect(page.getByTestId('stats')).toHaveText('Visits: 42');
+  await expect(page.getByTestId('stats-title')).toHaveText('Stats');
   await expect(page.getByTestId('audit')).toHaveText('no audit');
   const first = Number(await page.getByTestId('counter').textContent());
 
@@ -132,6 +133,7 @@ test('deferred, partial and optional props load on demand', async ({
   await page.getByRole('button', { name: 'Load audit' }).click();
   await expect(page.getByTestId('audit')).toHaveText('audit log loaded');
   await expect(page.getByTestId('stats')).toHaveText('Visits: 42');
+  await expect(page.getByTestId('stats-title')).toHaveText('Stats');
 });
 
 test('an empty response redirects back instead of failing', async ({

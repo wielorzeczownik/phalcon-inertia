@@ -58,7 +58,6 @@ It also ships `route()`, a port of [Ziggy](https://github.com/tighten/ziggy) for
   - [Where Phalcon differs from Laravel](#where-phalcon-differs-from-laravel)
 - [**Testing**](#testing)
 - [**Configuration**](#configuration)
-- [**Not covered yet**](#not-covered-yet)
 
 ## Installation
 
@@ -263,6 +262,19 @@ return $this->inertia->render('Dashboard', [
 | `Inertia::scroll($page)`            | yes                           | when requested, merged by the client |
 
 `append()`, `prepend()`, `deep()` and `matchOn($field)` chain onto `Inertia::defer()` as well. Every factory also exists on `PhalconInertia\Prop`, except `once()`, which there is written as `Prop::value($value)->once()`.
+
+#### Nested props
+
+Prop types work at any depth, and partial reloads take dot paths. A key with a dot is moved into the prop it points into:
+
+```php
+return $this->inertia->render('Users/Show', [
+    'user' => ['name' => $user->name],
+    'user.permissions' => Inertia::defer(function () use ($user) { return $user->permissions(); }),
+]);
+```
+
+The first visit sends `user.name` and lists `user.permissions` under `deferredProps`. `<Deferred data="user.permissions">` then loads it, and `router.reload({ only: ['user.permissions'] })` reloads only that. Children of a closure or a prop type are sent whole once their parent is selected, so `only: ['team.name']` on a `'team' => function () {...}` prop returns all of `team`.
 
 #### Rescued deferred props
 
@@ -1019,15 +1031,6 @@ The provider's `routes` option and the `Routes` constructor take the same keys:
 | `except`   | `[]`                                   | Patterns or group names of the routes to leave out             |
 | `groups`   | `[]`                                   | Named sets of patterns, usable wherever a pattern goes         |
 | `defaults` | `[]`                                   | Default parameter values for `route()`                         |
-
-## Not covered yet
-
-Props are matched by their top-level key only. A partial reload of `user.permissions` returns nothing (reload `user` instead), and a `defer()`, `once()`, `scroll()` or `merge()` prop nested inside another prop is resolved right away, like a plain value. Give expensive parts their own top-level prop:
-
-```php
-'user' => ['name' => $user->name],
-'userPermissions' => Inertia::defer(function () use ($user) { return $user->permissions(); }),
-```
 
 ## Credits
 

@@ -247,11 +247,11 @@ class InertiaTest extends TestCase
         $inertia = $this->inertia(self::inertiaServer());
         $inertia->share('auth', function () {
             return ['id' => 7];
-        })->share(['app' => 'demo']);
+        })->share(['app' => 'demo', 'auth.role' => 'admin']);
 
         $page = json_decode($inertia->render('Users/Index', ['app' => 'override'])->getContent(), true);
 
-        $this->assertSame(['id' => 7], $page['props']['auth']);
+        $this->assertSame(['id' => 7, 'role' => 'admin'], $page['props']['auth']);
         $this->assertSame('override', $page['props']['app']);
         $this->assertSame(['auth', 'app'], $page['sharedProps']);
     }
