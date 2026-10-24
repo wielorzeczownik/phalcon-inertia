@@ -373,9 +373,11 @@ class Inertia extends Injectable
             $headers[$name] = (string) $request->getHeader($name);
         }
 
+        $context = new RenderContext($component, $request);
+        $shared = Page::provide($this->shared, $context);
         $page = Page::build(
             $component,
-            array_merge(['errors' => Prop::always($errors)], $this->shared, $props),
+            array_merge(['errors' => Prop::always($errors)], $shared, Page::provide($props, $context)),
             $url,
             $this->version,
             $headers,
@@ -386,8 +388,9 @@ class Inertia extends Injectable
                 'preserveFragment' => $session ? $session->get(self::PRESERVE_FRAGMENT, false, true) : false,
                 'sharedProps' => array_unique(array_map(function ($key) {
                     return current(explode('.', (string) $key));
-                }, array_keys($this->shared))),
+                }, array_keys($shared))),
                 'flash' => $session ? $session->get(self::FLASH, [], true) : [],
+                'request' => $request,
                 'report' => function ($exception) {
                     $this->report($exception);
                 },

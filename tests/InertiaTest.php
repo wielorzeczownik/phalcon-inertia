@@ -5,6 +5,7 @@ namespace PhalconInertia\Tests;
 use Phalcon\Http\Response;
 use Phalcon\Mvc\View;
 use PhalconInertia\Inertia;
+use PhalconInertia\Tests\Fixtures\CurrentUser;
 use PhalconInertia\Tests\Fixtures\Message;
 use PhalconInertia\Tests\Fixtures\RecordingLogger;
 use PhalconInertia\Tests\Fixtures\StubSsr;
@@ -254,6 +255,21 @@ class InertiaTest extends TestCase
         $this->assertSame(['id' => 7, 'role' => 'admin'], $page['props']['auth']);
         $this->assertSame('override', $page['props']['app']);
         $this->assertSame(['auth', 'app'], $page['sharedProps']);
+    }
+
+    public function test_objects_provide_several_props_to_share_and_render()
+    {
+        $inertia = $this->inertia(self::inertiaServer());
+        $inertia->share([new CurrentUser]);
+
+        $page = json_decode($inertia->render('Users/Index', ['user' => 'Grace'])->getContent(), true);
+        $rendered = json_decode($this->inertia(self::inertiaServer())->render('Users/Index', [new CurrentUser, 'count' => 1])->getContent(), true);
+
+        $this->assertSame('Grace', $page['props']['user']);
+        $this->assertSame('Users/Index', $page['props']['page']);
+        $this->assertSame('GET', $page['props']['method']);
+        $this->assertSame(['user', 'page', 'method'], $page['sharedProps']);
+        $this->assertSame(['errors' => [], 'user' => 'Ada', 'page' => 'Users/Index', 'method' => 'GET', 'count' => 1], $rendered['props']);
     }
 
     public function test_share_once_shares_a_once_prop()

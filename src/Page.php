@@ -26,10 +26,13 @@ class Page
 
     private $options;
 
+    private $context;
+
     private $meta = [];
 
-    private function __construct($partial, array $headers, array $options)
+    private function __construct($component, $partial, array $headers, array $options)
     {
+        $this->context = new RenderContext($component, isset($options['request']) ? $options['request'] : null);
         $this->partial = $partial;
         $this->only = self::csv(self::header($headers, 'X-Inertia-Partial-Data'));
         $this->except = self::csv(self::header($headers, 'X-Inertia-Partial-Except'));
@@ -42,7 +45,7 @@ class Page
     public static function build($component, array $props, $url, $version, array $headers = [], array $options = [])
     {
         $partial = $component !== '' && self::header($headers, 'X-Inertia-Partial-Component') === $component;
-        $builder = new self($partial, $headers, $options);
+        $builder = new self($component, $partial, $headers, $options);
         $resolved = $builder->props(self::unpack($props), '', false);
         $meta = $builder->meta;
         $flash = isset($options['flash']) ? $options['flash'] : [];
@@ -99,6 +102,27 @@ class Page
         return $page;
     }
 
+    /**
+     * Replace ProvidesInertiaProperties objects under numeric keys with the props they provide.
+     */
+    public static function provide(array $props, RenderContext $context)
+    {
+        $provided = [];
+        foreach ($props as $key => $value) {
+            if (! is_int($key) || ! $value instanceof ProvidesInertiaProperties) {
+                $provided[$key] = $value;
+
+                continue;
+            }
+
+            foreach ($value->toInertiaProperties($context) as $name => $prop) {
+                $provided[$name] = $prop;
+            }
+        }
+
+        return $provided;
+    }
+
     public static function resolve($value)
     {
         $value = self::unwrap($value);
@@ -112,6 +136,7 @@ class Page
      */
     private function props(array $props, $prefix, $parentResolved)
     {
+        $props = self::provide($props, $this->context);
         $resolved = [];
         foreach ($props as $key => $prop) {
             $path = $prefix === '' ? (string) $key : $prefix.'.'.$key;
@@ -131,6 +156,9 @@ class Page
 
             try {
                 $value = self::unwrap($prop);
+                if ($value instanceof ProvidesInertiaProperty) {
+                    $value = $value->toInertiaProperty(new PropertyContext($path, $props, $this->context->request));
+                }
             } catch (\Exception $e) {
                 self::rescue($prop, $e, $this->options);
                 $this->meta['rescuedProps'][] = $path;

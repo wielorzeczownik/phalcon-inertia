@@ -5,6 +5,7 @@ namespace PhalconInertia\Tests;
 use Phalcon\Paginator\Adapter\NativeArray;
 use PhalconInertia\Page;
 use PhalconInertia\Prop;
+use PhalconInertia\Tests\Fixtures\UserResource;
 
 class PageTest extends TestCase
 {
@@ -191,6 +192,19 @@ class PageTest extends TestCase
         $this->assertSame('feed.plans', $page['onceProps']->{'feed.plans'}['prop']);
         $this->assertArrayNotHasKey('mergeProps', $partial);
         $this->assertSame(['feed.plans'], array_keys((array) $partial['onceProps']));
+    }
+
+    public function test_objects_provide_their_own_prop_value()
+    {
+        $page = $this->build([
+            'team' => ['lead' => new UserResource('Ada'), 'size' => 3],
+            'owner' => Prop::defer(function () {
+                return new UserResource('Grace');
+            }),
+        ], $this->partial(['X-Inertia-Partial-Data' => 'team,owner']));
+
+        $this->assertSame(['name' => 'Ada', 'path' => 'team.lead', 'siblings' => ['lead', 'size']], $page['props']->team['lead']);
+        $this->assertSame('Grace', $page['props']->owner['name']);
     }
 
     public function test_history_flags_are_present_only_when_true()
