@@ -9,7 +9,7 @@ emit_outputs() {
   } >>"$GITHUB_OUTPUT"
 }
 
-current_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || true)
+current_tag=$(git describe --tags --abbrev=0 --match 'v[0-9]*' --exclude '*-*' 2>/dev/null || true)
 next_tag=$(echo "${CLIFF_BUMPED_VERSION:-}" | tr -d '[:space:]')
 
 if [[ -z "$next_tag" ]]; then
@@ -40,6 +40,12 @@ fi
 if [[ "$(printf '%s\n' "$current_version" "$next_version" | sort -V | tail -1)" != "$next_version" ]]; then
   echo "git-cliff returned $next_version which is lower than current $current_version. Nothing to release."
   emit_outputs false "$current_version" "$current_tag"
+  exit 0
+fi
+
+if [[ "${RELEASE_KIND:-stable}" == "rc" ]]; then
+  rc=$(($(git tag -l "${next_tag}-rc.*" | wc -l) + 1))
+  emit_outputs true "${next_version}-rc.${rc}" "${next_tag}-rc.${rc}"
   exit 0
 fi
 
