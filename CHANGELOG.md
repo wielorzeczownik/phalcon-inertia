@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1](https://github.com/wielorzeczownik/phalcon-inertia/compare/v1.3.0...v1.3.1) - 2026-10-26
+
+### Bug Fixes
+
+- Draft releases before uploading assets (#26) ([998c811](https://github.com/wielorzeczownik/phalcon-inertia/commit/998c811222afafca0c5861f4de40ced4dce9d47a))
+
+### CI/CD
+
+- Cut release candidates on push and stable releases weekly (#25) ([67a14a5](https://github.com/wielorzeczownik/phalcon-inertia/commit/67a14a5931c3c7f4ba63cbf2ce11e341413e03dd))
+
 ## [1.3.0](https://github.com/wielorzeczownik/phalcon-inertia/compare/v1.2.0...v1.3.0) - 2026-10-24
 
 ### Features
