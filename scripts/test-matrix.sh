@@ -20,7 +20,7 @@ variant_args() {
   php74-phalcon41)
     echo "PHP_IMAGE=php:7.4-cli@sha256:620a6b9f4d4feef2210026172570465e9d0c1de79766418d3affd09190a7fda5"
     # renovate: datasource=github-releases depName=phalcon/cphalcon extractVersion=^v(?<version>.+)$
-    echo "PHALCON_VERSION=4.1.2"
+    echo "PHALCON_VERSION=4.1.3"
     # renovate: datasource=packagist depName=phpunit/phpunit
     echo "PHPUNIT_VERSION=9.6.38"
     ;;
