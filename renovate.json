@@ -34,6 +34,10 @@
   ],
   "packageRules": [
     {
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "semanticCommitType": "chore"
+    },
+    {
       "matchManagers": ["custom.regex"],
       "matchDatasources": ["docker"],
       "matchPackageNames": ["php"],
