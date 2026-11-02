@@ -5,7 +5,7 @@ ARG PHALCON_VERSION
 # renovate: datasource=github-tags depName=jbboehr/php-psr extractVersion=^v(?<version>.+)$
 ARG PSR_VERSION=1.2.0
 # renovate: datasource=github-releases depName=composer/composer
-ARG COMPOSER_VERSION=2.10.3
+ARG COMPOSER_VERSION=2.11.0
 ARG PHPUNIT_VERSION
 # TODO: phalcon/volt has no tagged release yet. Once 1.0.0 is out, switch to
 # "datasource=packagist depName=phalcon/volt" with VOLT_VERSION, update install.sh
