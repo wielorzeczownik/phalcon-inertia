@@ -25,21 +25,21 @@ variant_args() {
     echo "PHPUNIT_VERSION=9.6.38"
     ;;
   php84-phalcon5)
-    echo "PHP_IMAGE=php:8.4-cli@sha256:e2432ac85c3454004d89e3d75615abd2d205b7ffb9590e586fad1a053f016bb3"
+    echo "PHP_IMAGE=php:8.4-cli@sha256:d63e8b80cd4c6cfd01cfa7c910522e299cdc7ca1a2b6d6563db48df3c17e6c55"
     # renovate: datasource=github-releases depName=phalcon/cphalcon extractVersion=^v(?<version>.+)$
     echo "PHALCON_VERSION=5.23.0"
     # renovate: datasource=packagist depName=phpunit/phpunit
     echo "PHPUNIT_VERSION=11.5.57"
     ;;
   php85-phalcon5)
-    echo "PHP_IMAGE=php:8.5-cli@sha256:8e5d746f87655d89573e76d2b9125ed1b1578e47d3c466a2b2fdfc35593d9b41"
+    echo "PHP_IMAGE=php:8.5-cli@sha256:50956f094e90a716d43bea28087d447555ad80510e386ab8c9c10d8c70d781a9"
     # renovate: datasource=github-releases depName=phalcon/cphalcon extractVersion=^v(?<version>.+)$
     echo "PHALCON_VERSION=5.23.0"
     # renovate: datasource=packagist depName=phpunit/phpunit
     echo "PHPUNIT_VERSION=11.5.57"
     ;;
   php85-phalcon6)
-    echo "PHP_IMAGE=php:8.5-cli@sha256:8e5d746f87655d89573e76d2b9125ed1b1578e47d3c466a2b2fdfc35593d9b41"
+    echo "PHP_IMAGE=php:8.5-cli@sha256:50956f094e90a716d43bea28087d447555ad80510e386ab8c9c10d8c70d781a9"
     # renovate: datasource=packagist depName=phalcon/phalcon
     echo "PHALCON_VERSION=6.0.0RC4"
     # renovate: datasource=packagist depName=phpunit/phpunit
