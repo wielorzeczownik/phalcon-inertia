@@ -9,7 +9,7 @@
     "test": "playwright test"
   },
   "devDependencies": {
-    "@inertiajs/react": "3.9.1",
+    "@inertiajs/react": "3.11.0",
     "@inertiajs/svelte": "3.9.1",
     "@inertiajs/vue3": "3.9.1",
     "@playwright/test": "1.64.1",
