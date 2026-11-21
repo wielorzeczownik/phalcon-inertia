@@ -19,7 +19,7 @@ env:
 jobs:
   checks:
     name: Checks
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     permissions:
       contents: read
@@ -115,7 +115,7 @@ jobs:
     name: PHP
     needs: checks
     if: ${{ !cancelled() && needs.checks.outputs.php == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 15
     steps:
       - name: Checkout
@@ -142,7 +142,7 @@ jobs:
     name: JS
     needs: checks
     if: ${{ !cancelled() && needs.checks.outputs.js == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
       - name: Checkout
@@ -187,7 +187,7 @@ jobs:
     name: Tests ${{ matrix.variant }}
     needs: checks
     if: ${{ !cancelled() && needs.checks.outputs.matrix == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 45
     strategy:
       fail-fast: false
