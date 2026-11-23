@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Before reporting, check if the issue already exists in [open issues](https://github.com/wielorzeczownik/phalcon-inertia/issues).
+        Thanks for reporting. Any detail helps, but don't worry if you don't know all of it. If you have a moment, a quick look through [open issues](https://github.com/wielorzeczownik/phalcon-inertia/issues) helps avoid duplicates.
 
   - type: textarea
     id: description
@@ -19,24 +19,18 @@ body:
     id: expected
     attributes:
       label: What did you expect?
-    validations:
-      required: true
 
   - type: input
     id: version
     attributes:
       label: Package version
       placeholder: 'e.g. v0.1.0'
-    validations:
-      required: true
 
   - type: input
     id: runtime
     attributes:
       label: PHP and Phalcon versions
       placeholder: 'e.g. PHP 7.3.33, Phalcon 3.4.5'
-    validations:
-      required: true
 
   - type: input
     id: client
