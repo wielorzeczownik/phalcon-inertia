@@ -55,6 +55,8 @@ export default [
       'unicorn/prefer-query-selector': 'off',
       'unicorn/no-array-sort': 'off',
       'unicorn/number-literal-case': 'off',
+      // route(name, params, absolute, config) mirrors Ziggy's positional signature.
+      'unicorn/prefer-options-parameter': 'off',
       'unicorn/prevent-abbreviations': 'error',
       // `params` is public Ziggy API (route().params), so it keeps its name.
       'unicorn/name-replacements': [
